@@ -1,0 +1,183 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Debt Dashboard</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="eyebrow"><span class="eyebrow-dot"></span> Technical debt intelligence</div>
+        <h1>See the debt hiding in your codebase.</h1>
+
+        <p class="subtitle">
+            A focused, rule-based view of module health so your team can act before complexity compounds.
+        </p>
+
+        <div class="summary">
+
+            <div class="summary-item">
+                <h3>Records analysed</h3>
+                <p>10</p>
+            </div>
+
+            <div class="summary-item">
+                <h3>Metrics used</h3>
+                <p>3</p>
+            </div>
+
+            <div class="summary-item">
+                <h3>Analysis method</h3>
+                <p>Rule Engine</p>
+            </div>
+
+            <div class="summary-item">
+                <h3>Dataset</h3>
+                <p>Software Defect Prediction</p>
+            </div>
+
+        </div>
+
+        <div class="cards">
+
+            <div class="card high">
+                <h2>{{ high }}</h2>
+                <p>High Risk Modules</p>
+            </div>
+
+            <div class="card medium">
+                <h2>{{ medium }}</h2>
+                <p>Medium Risk Modules</p>
+            </div>
+
+            <div class="card low">
+                <h2>{{ low }}</h2>
+                <p>Low Risk Modules</p>
+            </div>
+
+        </div>
+
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Module overview</p>
+                <h2>Risk register</h2>
+            </div>
+            <span class="search-hint">Search by exact module ID</span>
+        </div>
+
+        <div class="search-box">
+            <span class="search-icon">⌕</span>
+            <input
+                type="text"
+                id="search"
+                placeholder="Search module ID (e.g. 1)"
+                onkeyup="searchTable()">
+        </div>
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>Module ID</th>
+                    <th>Debt Score</th>
+                    <th>Risk Level</th>
+                    <th>Triggered Metrics</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for item in results %}
+
+                <tr>
+
+                    <td>{{ item.record }}</td>
+
+                    <td>
+
+                        <div class="progress">
+
+                            <div
+                                class="progress-fill"
+                                style="width: {{ item.score }}%;">
+                            </div>
+
+                        </div>
+
+                        {{ item.score }}/100
+
+                    </td>
+
+                    <td>
+
+                        {% if item.level == "High Technical Debt" %}
+
+                        <span class="badge high-badge">
+                            🔴 HIGH
+                        </span>
+
+                        {% elif item.level == "Medium Technical Debt" %}
+
+                        <span class="badge medium-badge">
+                            🟡 MEDIUM
+                        </span>
+
+                        {% else %}
+
+                        <span class="badge low-badge">
+                            🟢 LOW
+                        </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+
+                        <ul class="reason-list">
+
+                            {% for reason in item.reasons %}
+
+                            <li>{{ reason }}</li>
+
+                            {% endfor %}
+
+                        </ul>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+        <footer>
+
+            <p>
+                Developed as part of Software Engineering DA1
+            </p>
+
+            <p>
+                Intelligent Technical Debt Prediction & Management Framework
+            </p>
+
+        </footer>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='jsc/script.js') }}"></script>
+
+</body>
+
+</html>
