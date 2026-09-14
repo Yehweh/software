@@ -1,182 +1,1515 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Technical Debt Dashboard</title>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Dashboard | Technical Debt Intelligence
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
 </head>
-<body>
 
-    <div class="container">
 
-        <div class="eyebrow"><span class="eyebrow-dot"></span> Technical debt intelligence</div>
-        <h1>See the debt hiding in your codebase.</h1>
+<body class="dashboard-page">
 
-        <p class="subtitle">
-            A focused, rule-based view of module health so your team can act before complexity compounds.
+
+<!-- =========================================================
+     HEADER
+========================================================= -->
+
+<header class="dashboard-header">
+
+    <div class="dashboard-brand">
+
+        <span class="brand-dot"></span>
+
+        TECHNICAL DEBT INTELLIGENCE
+
+    </div>
+
+
+    <div class="dashboard-user">
+
+        <span>
+            Welcome, {{ session.get("user_name", session.get("username", "User")) }}
+        </span>
+
+        <a
+            href="{{ url_for('logout') }}"
+            class="logout-button"
+        >
+            Logout
+        </a>
+
+    </div>
+
+</header>
+
+
+
+<!-- =========================================================
+     MAIN DASHBOARD
+========================================================= -->
+
+<main class="dashboard-container">
+
+
+<!-- =========================================================
+     PAGE INTRODUCTION
+========================================================= -->
+
+<section class="dashboard-heading">
+
+    <div>
+
+        <p class="auth-label">
+            SOFTWARE QUALITY ANALYSIS
         </p>
 
-        <div class="summary">
+        <h1>
+            Technical Debt Dashboard
+        </h1>
 
-            <div class="summary-item">
-                <h3>Records analysed</h3>
-                <p>10</p>
+        <p>
+            Analyze your software project using measurable
+            source-code quality metrics and technical-debt indicators.
+        </p>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     FLASH MESSAGES
+========================================================= -->
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+
+    {% if messages %}
+
+        {% for category, message in messages %}
+
+            <div class="auth-message {{ category }}">
+
+                {% if category == "success" %}
+
+                    <span class="message-icon">
+                        ✓
+                    </span>
+
+                {% else %}
+
+                    <span class="message-icon">
+                        !
+                    </span>
+
+                {% endif %}
+
+
+                <div class="message-content">
+
+                    <strong>
+
+                        {% if category == "success" %}
+                            Success
+                        {% else %}
+                            Notice
+                        {% endif %}
+
+                    </strong>
+
+                    <span>
+                        {{ message }}
+                    </span>
+
+                </div>
+
             </div>
 
-            <div class="summary-item">
-                <h3>Metrics used</h3>
-                <p>3</p>
-            </div>
+        {% endfor %}
 
-            <div class="summary-item">
-                <h3>Analysis method</h3>
-                <p>Rule Engine</p>
-            </div>
+    {% endif %}
 
-            <div class="summary-item">
-                <h3>Dataset</h3>
-                <p>Software Defect Prediction</p>
-            </div>
+{% endwith %}
+
+
+
+<!-- =========================================================
+     UPLOAD PROJECT
+========================================================= -->
+
+<section class="dashboard-panel upload-panel">
+
+    <div class="panel-header">
+
+        <div>
+
+            <p class="panel-label">
+                PROJECT ANALYSIS
+            </p>
+
+            <h2>
+                Upload Your Software Project
+            </h2>
 
         </div>
 
-        <div class="cards">
 
-            <div class="card high">
-                <h2>{{ high }}</h2>
-                <p>High Risk Modules</p>
+        <span class="status-badge">
+            READY
+        </span>
+
+    </div>
+
+
+    <p class="panel-description">
+
+        Upload your software project as a ZIP file.
+        The system will automatically detect source files,
+        calculate quality metrics, and identify technical debt.
+
+    </p>
+
+
+    <form
+        method="POST"
+        action="{{ url_for('upload_project') }}"
+        enctype="multipart/form-data"
+        class="upload-form"
+    >
+
+        <label
+            for="project_file"
+            class="upload-box"
+        >
+
+            <div class="upload-icon">
+                ↑
             </div>
 
-            <div class="card medium">
-                <h2>{{ medium }}</h2>
-                <p>Medium Risk Modules</p>
-            </div>
 
-            <div class="card low">
-                <h2>{{ low }}</h2>
-                <p>Low Risk Modules</p>
-            </div>
+            <strong>
+                Choose a project ZIP file
+            </strong>
+
+
+            <span>
+                Python, Java, C, C++, JavaScript, HTML and CSS
+            </span>
+
+
+            <span
+                id="selected-file"
+                class="selected-file"
+            >
+                No file selected
+            </span>
+
+        </label>
+
+
+        <input
+            type="file"
+            id="project_file"
+            name="project_file"
+            accept=".zip"
+            required
+        >
+
+
+        <button
+            type="submit"
+            class="auth-button upload-button"
+        >
+
+            Analyze Project
+
+            <span>
+                →
+            </span>
+
+        </button>
+
+    </form>
+
+</section>
+
+
+
+<!-- =========================================================
+     PROJECT RESULTS
+========================================================= -->
+
+{% if project %}
+
+
+
+<!-- =========================================================
+     PROJECT SCAN SUMMARY
+========================================================= -->
+
+<section class="dashboard-panel project-analysis-panel">
+
+    <div class="panel-header">
+
+        <div>
+
+            <p class="panel-label">
+                PROJECT SCAN
+            </p>
+
+            <h2>
+                Project Analysis Complete
+            </h2>
 
         </div>
 
-        <div class="section-heading">
-            <div>
-                <p class="eyebrow">Module overview</p>
-                <h2>Risk register</h2>
-            </div>
-            <span class="search-hint">Search by exact module ID</span>
+
+        <span class="status-badge">
+            ANALYSIS COMPLETE
+        </span>
+
+    </div>
+
+
+    <div class="project-summary">
+
+
+        <!-- SOURCE FILES -->
+
+        <div class="project-summary-card">
+
+            <span>
+                Source Files
+            </span>
+
+            <strong>
+                {{ project.file_count }}
+            </strong>
+
         </div>
 
-        <div class="search-box">
-            <span class="search-icon">⌕</span>
+
+        <!-- TOTAL LINES -->
+
+        <div class="project-summary-card">
+
+            <span>
+                Total Code Lines
+            </span>
+
+            <strong>
+                {{ project.total_lines }}
+            </strong>
+
+        </div>
+
+
+        <!-- PYTHON FILES -->
+
+        <div class="project-summary-card">
+
+            <span>
+                Python Files
+            </span>
+
+            <strong>
+                {{ project_metrics.python_files if project_metrics else 0 }}
+            </strong>
+
+        </div>
+
+
+        <!-- ANALYZED FILES -->
+
+        <div class="project-summary-card">
+
+            <span>
+                Files Analysed
+            </span>
+
+            <strong>
+                {{ project_metrics.analyzed_files if project_metrics else 0 }}
+            </strong>
+
+        </div>
+
+
+        <!-- PROJECT ID -->
+
+        <div class="project-summary-card">
+
+            <span>
+                Project ID
+            </span>
+
+            <strong>
+                {{ project.project_id }}
+            </strong>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     PROJECT DEBT ASSESSMENT
+========================================================= -->
+
+{% if project_metrics %}
+
+<section class="dashboard-panel">
+
+    <div class="panel-header">
+
+        <div>
+
+            <p class="panel-label">
+                TECHNICAL DEBT
+            </p>
+
+            <h2>
+                Project Debt Assessment
+            </h2>
+
+        </div>
+
+
+        <span class="status-badge">
+            CODE-BASED ANALYSIS
+        </span>
+
+    </div>
+
+
+    <p class="panel-description">
+
+        Technical debt is estimated from measurable
+        source-code quality indicators such as complexity,
+        function size, nesting depth, documentation density,
+        and unresolved development markers.
+
+    </p>
+
+
+    <div class="metric-list">
+
+
+        <!-- PROJECT RISK -->
+
+        <div class="metric-item">
+
+            <span>
+                Overall Project Risk
+            </span>
+
+            <strong>
+
+                {% if project_metrics.project_debt_level == "High Technical Debt" %}
+
+                    HIGH
+
+                {% elif project_metrics.project_debt_level == "Medium Technical Debt" %}
+
+                    MEDIUM
+
+                {% else %}
+
+                    LOW
+
+                {% endif %}
+
+            </strong>
+
+        </div>
+
+
+        <!-- FILES ANALYZED -->
+
+        <div class="metric-item">
+
+            <span>
+                Files Analysed
+            </span>
+
+            <strong>
+                {{ project_metrics.analyzed_files }}
+            </strong>
+
+        </div>
+
+
+        <!-- HIGH -->
+
+        <div class="metric-item">
+
+            <span>
+                High Debt Files
+            </span>
+
+            <strong>
+                {{ project_metrics.high_debt }}
+            </strong>
+
+        </div>
+
+
+        <!-- MEDIUM -->
+
+        <div class="metric-item">
+
+            <span>
+                Medium Debt Files
+            </span>
+
+            <strong>
+                {{ project_metrics.medium_debt }}
+            </strong>
+
+        </div>
+
+
+        <!-- LOW -->
+
+        <div class="metric-item">
+
+            <span>
+                Low Debt Files
+            </span>
+
+            <strong>
+                {{ project_metrics.low_debt }}
+            </strong>
+
+        </div>
+
+
+        <!-- AVERAGE SCORE -->
+
+        <div class="metric-item">
+
+            <span>
+                Average Debt Score
+            </span>
+
+            <strong>
+                {{ project_metrics.average_debt_score }}/100
+            </strong>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endif %}
+
+
+
+<!-- =========================================================
+     PROJECT QUALITY METRICS
+========================================================= -->
+
+{% if project_metrics %}
+
+<section class="dashboard-panel">
+
+    <div class="panel-header">
+
+        <div>
+
+            <p class="panel-label">
+                CODE QUALITY
+            </p>
+
+            <h2>
+                Project Quality Metrics
+            </h2>
+
+        </div>
+
+
+        <span class="status-badge">
+            SOURCE-CODE METRICS
+        </span>
+
+    </div>
+
+
+    <p class="panel-description">
+
+        These measurements are calculated directly from
+        the source code contained in the uploaded project.
+
+    </p>
+
+
+    <div class="metric-list">
+
+
+        <!-- LOC -->
+
+        <div class="metric-item">
+
+            <span>
+                Lines of Code
+            </span>
+
+            <strong>
+                {{ project_metrics.total_lines }}
+            </strong>
+
+        </div>
+
+
+        <!-- FUNCTIONS -->
+
+        <div class="metric-item">
+
+            <span>
+                Number of Functions
+            </span>
+
+            <strong>
+                {{ project_metrics.total_functions }}
+            </strong>
+
+        </div>
+
+
+        <!-- CLASSES -->
+
+        <div class="metric-item">
+
+            <span>
+                Number of Classes
+            </span>
+
+            <strong>
+                {{ project_metrics.total_classes }}
+            </strong>
+
+        </div>
+
+
+        <!-- IMPORTS -->
+
+        <div class="metric-item">
+
+            <span>
+                Imports / Dependencies
+            </span>
+
+            <strong>
+                {{ project_metrics.total_imports }}
+            </strong>
+
+        </div>
+
+
+        <!-- COMMENT DENSITY -->
+
+        <div class="metric-item">
+
+            <span>
+                Average Comment Density
+            </span>
+
+            <strong>
+                {{ project_metrics.average_comment_density }}%
+            </strong>
+
+        </div>
+
+
+        <!-- FUNCTION LENGTH -->
+
+        <div class="metric-item">
+
+            <span>
+                Average Function Length
+            </span>
+
+            <strong>
+                {{ project_metrics.average_function_length }}
+            </strong>
+
+        </div>
+
+
+        <!-- COMPLEXITY -->
+
+        <div class="metric-item">
+
+            <span>
+                Average Cyclomatic Complexity
+            </span>
+
+            <strong>
+                {{ project_metrics.cyclomatic_complexity }}
+            </strong>
+
+        </div>
+
+
+        <!-- NESTING -->
+
+        <div class="metric-item">
+
+            <span>
+                Maximum Nesting Depth
+            </span>
+
+            <strong>
+                {{ project_metrics.max_nesting_depth }}
+            </strong>
+
+        </div>
+
+
+        <!-- TODO -->
+
+        <div class="metric-item">
+
+            <span>
+                TODO Items
+            </span>
+
+            <strong>
+                {{ project_metrics.todo_count }}
+            </strong>
+
+        </div>
+
+
+        <!-- FIXME -->
+
+        <div class="metric-item">
+
+            <span>
+                FIXME Items
+            </span>
+
+            <strong>
+                {{ project_metrics.fixme_count }}
+            </strong>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endif %}
+
+
+
+<!-- =========================================================
+     FILE-LEVEL DEBT ANALYSIS
+========================================================= -->
+
+<section class="dashboard-panel results-panel">
+
+    <div class="panel-header">
+
+        <div>
+
+            <p class="panel-label">
+                TECHNICAL DEBT ANALYSIS
+            </p>
+
+            <h2>
+                File-Level Debt Assessment
+            </h2>
+
+        </div>
+
+
+        <div class="search-container">
+
             <input
                 type="text"
-                id="search"
-                placeholder="Search module ID (e.g. 1)"
-                onkeyup="searchTable()">
+                id="fileSearchInput"
+                placeholder="Search files..."
+            >
+
         </div>
+
+    </div>
+
+
+    <p class="panel-description">
+
+        Each source file is inspected individually.
+        Python files receive structural static analysis,
+        while other detected file types are listed for
+        project coverage.
+
+    </p>
+
+
+    <div class="table-wrapper">
+
+        <table id="fileResultsTable">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Source File
+                    </th>
+
+                    <th>
+                        Language
+                    </th>
+
+                    <th>
+                        LOC
+                    </th>
+
+                    <th>
+                        Functions
+                    </th>
+
+                    <th>
+                        Complexity
+                    </th>
+
+                    <th>
+                        Debt Score
+                    </th>
+
+                    <th>
+                        Risk
+                    </th>
+
+                    <th>
+                        Findings
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+
+            {% for file in project.files %}
+
+            <tr>
+
+
+                <!-- =================================================
+                     SOURCE FILE
+                ================================================== -->
+
+                <td>
+
+                    <strong class="file-name">
+                        {{ file.path }}
+                    </strong>
+
+                </td>
+
+
+                <!-- =================================================
+                     LANGUAGE
+                ================================================== -->
+
+                <td>
+
+                    {% if file.extension == ".py" %}
+
+                        <span class="reason-tag">
+                            Python
+                        </span>
+
+                    {% elif file.extension == ".java" %}
+
+                        <span class="reason-tag">
+                            Java
+                        </span>
+
+                    {% elif file.extension in [".c", ".h"] %}
+
+                        <span class="reason-tag">
+                            C
+                        </span>
+
+                    {% elif file.extension in [".cpp", ".hpp"] %}
+
+                        <span class="reason-tag">
+                            C++
+                        </span>
+
+                    {% elif file.extension == ".js" %}
+
+                        <span class="reason-tag">
+                            JavaScript
+                        </span>
+
+                    {% elif file.extension == ".html" %}
+
+                        <span class="reason-tag">
+                            HTML
+                        </span>
+
+                    {% elif file.extension == ".css" %}
+
+                        <span class="reason-tag">
+                            CSS
+                        </span>
+
+                    {% else %}
+
+                        <span class="reason-tag">
+                            {{ file.extension }}
+                        </span>
+
+                    {% endif %}
+
+                </td>
+
+
+                <!-- =================================================
+                     LINES OF CODE
+                ================================================== -->
+
+                <td>
+                    {{ file.lines }}
+                </td>
+
+
+                <!-- =================================================
+                     FUNCTIONS
+                ================================================== -->
+
+                <td>
+
+                    {% if file.metrics %}
+
+                        {{ file.metrics.num_functions }}
+
+                    {% else %}
+
+                        —
+
+                    {% endif %}
+
+                </td>
+
+
+                <!-- =================================================
+                     COMPLEXITY
+                ================================================== -->
+
+                <td>
+
+                    {% if file.metrics %}
+
+                        {{ file.metrics.cyclomatic_complexity }}
+
+                    {% else %}
+
+                        —
+
+                    {% endif %}
+
+                </td>
+
+
+                <!-- =================================================
+                     DEBT SCORE
+                ================================================== -->
+
+                <td>
+
+                    {% if file.technical_debt %}
+
+                        <strong>
+                            {{ file.technical_debt.score }}/100
+                        </strong>
+
+                    {% else %}
+
+                        —
+
+                    {% endif %}
+
+                </td>
+
+
+                <!-- =================================================
+                     RISK
+                ================================================== -->
+
+                <td>
+
+                    {% if file.technical_debt %}
+
+
+                        {% if file.technical_debt.level == "High Technical Debt" %}
+
+                            <span class="risk-badge risk-high">
+                                HIGH
+                            </span>
+
+
+                        {% elif file.technical_debt.level == "Medium Technical Debt" %}
+
+                            <span class="risk-badge risk-medium">
+                                MEDIUM
+                            </span>
+
+
+                        {% else %}
+
+                            <span class="risk-badge risk-low">
+                                LOW
+                            </span>
+
+                        {% endif %}
+
+
+                    {% else %}
+
+                        <span class="reason-tag">
+                            NOT ANALYZED
+                        </span>
+
+                    {% endif %}
+
+                </td>
+
+
+                <!-- =================================================
+                     DEBT FINDINGS
+                ================================================== -->
+
+                <td>
+
+                    {% if file.technical_debt %}
+
+                        {% for reason in file.technical_debt.reasons %}
+
+                            <span class="reason-tag">
+                                {{ reason }}
+                            </span>
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <span class="reason-tag">
+                            Language analysis pending
+                        </span>
+
+                    {% endif %}
+
+                </td>
+
+
+            </tr>
+
+            {% endfor %}
+
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     DETAILED PYTHON ANALYSIS
+========================================================= -->
+
+<section class="dashboard-panel">
+
+    <div class="panel-header">
+
+        <div>
+
+            <p class="panel-label">
+                DETAILED METRICS
+            </p>
+
+            <h2>
+                Python File Quality Analysis
+            </h2>
+
+        </div>
+
+
+        <span class="status-badge">
+            STATIC ANALYSIS
+        </span>
+
+    </div>
+
+
+    <p class="panel-description">
+
+        Detailed structural measurements calculated
+        from Python source files using static analysis.
+
+    </p>
+
+
+    <div class="table-wrapper">
 
         <table>
 
             <thead>
 
                 <tr>
-                    <th>Module ID</th>
-                    <th>Debt Score</th>
-                    <th>Risk Level</th>
-                    <th>Triggered Metrics</th>
+
+                    <th>
+                        Python File
+                    </th>
+
+                    <th>
+                        LOC
+                    </th>
+
+                    <th>
+                        Comment Density
+                    </th>
+
+                    <th>
+                        Functions
+                    </th>
+
+                    <th>
+                        Avg Function Length
+                    </th>
+
+                    <th>
+                        Max Function Length
+                    </th>
+
+                    <th>
+                        Complexity
+                    </th>
+
+                    <th>
+                        Nesting
+                    </th>
+
+                    <th>
+                        Imports
+                    </th>
+
+                    <th>
+                        TODO
+                    </th>
+
+                    <th>
+                        FIXME
+                    </th>
+
                 </tr>
 
             </thead>
 
+
             <tbody>
 
-                {% for item in results %}
+
+            {% for file in project.files %}
+
+
+                {% if file.metrics %}
+
 
                 <tr>
 
-                    <td>{{ item.record }}</td>
+
+                    <!-- FILE -->
 
                     <td>
 
-                        <div class="progress">
-
-                            <div
-                                class="progress-fill"
-                                style="width: {{ item.score }}%;">
-                            </div>
-
-                        </div>
-
-                        {{ item.score }}/100
+                        <strong class="file-name">
+                            {{ file.path }}
+                        </strong>
 
                     </td>
+
+
+                    <!-- LOC -->
 
                     <td>
-
-                        {% if item.level == "High Technical Debt" %}
-
-                        <span class="badge high-badge">
-                            🔴 HIGH
-                        </span>
-
-                        {% elif item.level == "Medium Technical Debt" %}
-
-                        <span class="badge medium-badge">
-                            🟡 MEDIUM
-                        </span>
-
-                        {% else %}
-
-                        <span class="badge low-badge">
-                            🟢 LOW
-                        </span>
-
-                        {% endif %}
-
+                        {{ file.lines }}
                     </td>
+
+
+                    <!-- COMMENT DENSITY -->
 
                     <td>
-
-                        <ul class="reason-list">
-
-                            {% for reason in item.reasons %}
-
-                            <li>{{ reason }}</li>
-
-                            {% endfor %}
-
-                        </ul>
-
+                        {{ file.metrics.comment_density }}%
                     </td>
+
+
+                    <!-- FUNCTIONS -->
+
+                    <td>
+                        {{ file.metrics.num_functions }}
+                    </td>
+
+
+                    <!-- AVG FUNCTION LENGTH -->
+
+                    <td>
+                        {{ file.metrics.avg_function_length }}
+                    </td>
+
+
+                    <!-- MAX FUNCTION LENGTH -->
+
+                    <td>
+                        {{ file.metrics.max_function_length }}
+                    </td>
+
+
+                    <!-- COMPLEXITY -->
+
+                    <td>
+                        {{ file.metrics.cyclomatic_complexity }}
+                    </td>
+
+
+                    <!-- NESTING -->
+
+                    <td>
+                        {{ file.metrics.max_nesting_depth }}
+                    </td>
+
+
+                    <!-- IMPORTS -->
+
+                    <td>
+                        {{ file.metrics.num_imports }}
+                    </td>
+
+
+                    <!-- TODO -->
+
+                    <td>
+                        {{ file.metrics.todo_count }}
+                    </td>
+
+
+                    <!-- FIXME -->
+
+                    <td>
+                        {{ file.metrics.fixme_count }}
+                    </td>
+
 
                 </tr>
 
-                {% endfor %}
+
+                {% endif %}
+
+
+            {% endfor %}
+
 
             </tbody>
 
         </table>
 
-        <footer>
+    </div>
 
-            <p>
-                Developed as part of Software Engineering DA1
+</section>
+
+
+
+<!-- =========================================================
+     DETECTED SOURCE FILES
+========================================================= -->
+
+<section class="dashboard-panel">
+
+    <div class="panel-header">
+
+        <div>
+
+            <p class="panel-label">
+                PROJECT CONTENT
             </p>
 
-            <p>
-                Intelligent Technical Debt Prediction & Management Framework
-            </p>
+            <h2>
+                Detected Source Files
+            </h2>
 
-        </footer>
+        </div>
+
+
+        <span class="status-badge">
+            {{ project.file_count }} FILES
+        </span>
 
     </div>
 
-    <script src="{{ url_for('static', filename='jsc/script.js') }}"></script>
+
+    <p class="panel-description">
+
+        Source files discovered inside the uploaded
+        software project.
+
+    </p>
+
+
+    <div class="source-files">
+
+
+    {% for file in project.files %}
+
+
+        <div class="source-file-row">
+
+
+            <div>
+
+                <strong>
+                    {{ file.path }}
+                </strong>
+
+
+                <span>
+
+                    {% if file.extension == ".py" %}
+                        Python
+                    {% elif file.extension == ".java" %}
+                        Java
+                    {% elif file.extension in [".c", ".h"] %}
+                        C
+                    {% elif file.extension in [".cpp", ".hpp"] %}
+                        C++
+                    {% elif file.extension == ".js" %}
+                        JavaScript
+                    {% elif file.extension == ".html" %}
+                        HTML
+                    {% elif file.extension == ".css" %}
+                        CSS
+                    {% else %}
+                        {{ file.extension }}
+                    {% endif %}
+
+                </span>
+
+            </div>
+
+
+            <span>
+                {{ file.lines }} lines
+            </span>
+
+
+        </div>
+
+
+    {% endfor %}
+
+
+    </div>
+
+</section>
+
+
+
+{% else %}
+
+
+<!-- =========================================================
+     NO PROJECT STATE
+========================================================= -->
+
+<section class="dashboard-panel">
+
+    <div class="panel-header">
+
+        <div>
+
+            <p class="panel-label">
+                PROJECT STATUS
+            </p>
+
+            <h2>
+                No Project Analyzed
+            </h2>
+
+        </div>
+
+
+        <span class="status-badge">
+            WAITING
+        </span>
+
+    </div>
+
+
+    <p class="panel-description">
+
+        Upload a software project ZIP file above to begin
+        source-code quality analysis.
+
+    </p>
+
+</section>
+
+
+{% endif %}
+
+
+</main>
+
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+<script>
+
+
+/* =========================================================
+   FILE SEARCH
+========================================================= */
+
+const fileSearchInput =
+    document.getElementById("fileSearchInput");
+
+
+const fileResultsTable =
+    document.getElementById("fileResultsTable");
+
+
+if (
+    fileSearchInput &&
+    fileResultsTable
+) {
+
+    fileSearchInput.addEventListener(
+        "input",
+        function () {
+
+            const searchValue =
+                this.value
+                .toLowerCase()
+                .trim();
+
+
+            const rows =
+                fileResultsTable.querySelectorAll(
+                    "tbody tr"
+                );
+
+
+            rows.forEach(
+                function (row) {
+
+                    const rowText =
+                        row.textContent
+                        .toLowerCase();
+
+
+                    if (
+                        rowText.includes(
+                            searchValue
+                        )
+                    ) {
+
+                        row.style.display = "";
+
+                    } else {
+
+                        row.style.display = "none";
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+
+/* =========================================================
+   PROJECT FILE SELECTION
+========================================================= */
+
+const projectInput =
+    document.getElementById(
+        "project_file"
+    );
+
+
+const selectedFile =
+    document.getElementById(
+        "selected-file"
+    );
+
+
+if (
+    projectInput &&
+    selectedFile
+) {
+
+    projectInput.addEventListener(
+        "change",
+        function () {
+
+            if (
+                this.files &&
+                this.files.length > 0
+            ) {
+
+                selectedFile.textContent =
+                    this.files[0].name;
+
+            } else {
+
+                selectedFile.textContent =
+                    "No file selected";
+
+            }
+
+        }
+    );
+
+}
+
+
+</script>
+
 
 </body>
 

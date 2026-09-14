@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Create Account | Technical Debt Intelligence</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+
+<body class="auth-page">
+
+
+    <!-- Background glow -->
+
+    <div class="auth-background-glow glow-one"></div>
+
+    <div class="auth-background-glow glow-two"></div>
+
+
+    <main class="auth-wrapper">
+
+
+        <section class="auth-card signup-card">
+
+
+            <!-- Brand -->
+
+            <div class="auth-brand">
+
+                <span class="brand-dot"></span>
+
+                TECHNICAL DEBT INTELLIGENCE
+
+            </div>
+
+
+            <!-- Heading -->
+
+            <div class="auth-heading">
+
+                <p class="auth-label">
+                    GET STARTED
+                </p>
+
+                <h1>
+                    Start analyzing your code.
+                </h1>
+
+                <p>
+                    Create an account to evaluate software quality
+                    and identify technical debt.
+                </p>
+
+            </div>
+
+
+            <!-- Flash Messages -->
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+
+                {% if messages %}
+
+                    {% for category, message in messages %}
+
+                        <div class="auth-message {{ category }}">
+
+                            {% if category == "success" %}
+
+                                <span class="message-icon">
+                                    ✓
+                                </span>
+
+                            {% else %}
+
+                                <span class="message-icon">
+                                    !
+                                </span>
+
+                            {% endif %}
+
+
+                            <div class="message-content">
+
+                                <strong>
+
+                                    {% if category == "success" %}
+                                        Success
+                                    {% else %}
+                                        Notice
+                                    {% endif %}
+
+                                </strong>
+
+                                <span>
+                                    {{ message }}
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                {% endif %}
+
+            {% endwith %}
+
+
+            <!-- Signup Form -->
+
+            <form
+                method="POST"
+                action="{{ url_for('signup') }}"
+                class="auth-form"
+            >
+
+
+                <!-- Name -->
+
+                <div class="input-group">
+
+                    <label for="name">
+                        Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        placeholder="Enter your name"
+                        autocomplete="name"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- Email -->
+
+                <div class="input-group">
+
+                    <label for="email">
+                        Email
+                    </label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="you@example.com"
+                        autocomplete="email"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- Password -->
+
+                <div class="input-group">
+
+                    <label for="password">
+                        Password
+                    </label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Create a password"
+                        minlength="6"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- Confirm Password -->
+
+                <div class="input-group">
+
+                    <label for="confirm_password">
+                        Confirm password
+                    </label>
+
+                    <input
+                        type="password"
+                        id="confirm_password"
+                        name="confirm_password"
+                        placeholder="Repeat your password"
+                        minlength="6"
+                        autocomplete="new-password"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- Create Account Button -->
+
+                <button
+                    type="submit"
+                    class="auth-button"
+                >
+
+                    Create account
+
+                    <span>
+                        →
+                    </span>
+
+                </button>
+
+
+            </form>
+
+
+            <!-- Divider -->
+
+            <div class="auth-divider">
+
+                <span>
+                    OR
+                </span>
+
+            </div>
+
+
+            <!-- Login Link -->
+
+            <p class="auth-switch">
+
+                Already have an account?
+
+                <a href="{{ url_for('login') }}">
+                    Sign in
+                </a>
+
+            </p>
+
+
+        </section>
+
+
+    </main>
+
+
+</body>
+
+</html>
