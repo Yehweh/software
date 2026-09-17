@@ -1,92 +1,249 @@
+"""
+Rule-based technical debt detection engine.
+"""
+
+
+def _get_value(row, key, default=0):
+    try:
+        value = row.get(key, default)
+
+        if value is None:
+            return default
+
+        if isinstance(value, bool):
+            return default
+
+        if isinstance(value, str):
+            value = value.strip()
+
+            if not value:
+                return default
+
+        return float(value)
+
+    except (TypeError, ValueError):
+        return default
+
+
 def detect_technical_debt(row):
     """
-    Detect technical debt from software quality metrics.
-    Evaluates both dataset benchmarks and project-level measurements:
-    - Cyclomatic Complexity
-    - Code Duplication
-    - Test Coverage
-    - Coupling Between Objects (CBO)
-    - Lack of Cohesion (LCOM)
-    - Code Churn
-    - Past Defects
-    - Security Vulnerabilities
+    Detect technical debt using measurable software quality metrics.
     """
+
+    if not isinstance(row, dict):
+        row = {}
 
     score = 0
     reasons = []
 
-    def get_val(key, default=0):
+    complexity = _get_value(
+        row,
+        "cyclomatic_complexity"
+    )
+
+    duplication = _get_value(
+        row,
+        "duplication_percentage"
+    )
+
+    coverage = _get_value(
+        row,
+        "test_coverage"
+    )
+
+    cbo = _get_value(
+        row,
+        "coupling_between_objects"
+    )
+
+    lcom = _get_value(
+        row,
+        "lack_of_cohesion"
+    )
+
+    churn = _get_value(
+        row,
+        "code_churn"
+    )
+
+    past_defects = _get_value(
+        row,
+        "past_defects"
+    )
+
+    security = _get_value(
+        row,
+        "security_vulnerabilities"
+    )
+
+    if 0 < duplication <= 1:
+        duplication *= 100
+
+    if 0 < coverage <= 1:
+        coverage *= 100
+
+    # Cyclomatic Complexity
+    if complexity >= 30:
+        score += 15
+        reasons.append(
+            "High Cyclomatic Complexity"
+        )
+
+    elif complexity > 20:
+        score += 10
+        reasons.append(
+            "High Cyclomatic Complexity"
+        )
+
+    elif complexity > 10:
+        score += 5
+        reasons.append(
+            "Moderate Cyclomatic Complexity"
+        )
+
+    # Duplication
+    if duplication > 25:
+        score += 15
+        reasons.append(
+            "High Code Duplication"
+        )
+
+    elif duplication > 10:
+        score += 8
+        reasons.append(
+            "Moderate Code Duplication"
+        )
+
+    # Test Coverage
+    coverage_raw = row.get(
+        "test_coverage"
+    )
+
+    coverage_valid = True
+
+    if coverage_raw is None:
+        coverage_valid = False
+
+    elif isinstance(
+        coverage_raw,
+        str
+    ):
+
         try:
-            val = row[key]
-            return float(val) if val is not None else default
-        except (KeyError, IndexError, TypeError, ValueError):
-            return default
+            float(coverage_raw)
 
-    complexity = get_val("cyclomatic_complexity", 0)
-    duplication = get_val("duplication_percentage", 0)
-    coverage = get_val("test_coverage", 100)
-    cbo = get_val("coupling_between_objects", 0)
-    lcom = get_val("lack_of_cohesion", 0)
-    churn = get_val("code_churn", 0)
-    past_defects = get_val("past_defects", 0)
-    security_vulnerabilities = get_val("security_vulnerabilities", 0)
+        except (
+            TypeError,
+            ValueError
+        ):
+            coverage_valid = False
 
-    # 1. Cyclomatic Complexity
-    if complexity > 30:
-        score += 15
-        reasons.append("High Cyclomatic Complexity")
+    if coverage_valid:
 
-    # 2. Code Duplication (handles both 0-100% and 0.0-1.0 proportions)
-    if duplication > 25 or (0 < duplication <= 1.0 and duplication > 0.25):
-        score += 15
-        reasons.append("High Code Duplication")
+        if coverage < 60:
+            score += 15
+            reasons.append(
+                "Low Test Coverage"
+            )
 
-    # 3. Test Coverage (handles both 0-100% and 0.0-1.0 proportions)
-    if (coverage < 60 and coverage > 1.0) or (0 <= coverage <= 1.0 and coverage < 0.60):
-        score += 15
-        reasons.append("Low Test Coverage")
+        elif coverage < 75:
+            score += 8
+            reasons.append(
+                "Moderate Test Coverage"
+            )
 
-    # 4. Coupling Between Objects (CBO)
+    # CBO
     if cbo > 25:
         score += 15
-        reasons.append("High Coupling Between Objects (CBO)")
+        reasons.append(
+            "High Coupling Between Objects (CBO)"
+        )
 
-    # 5. Lack of Cohesion (LCOM)
-    if lcom > 70 or (0 < lcom <= 1.0 and lcom > 0.70):
+    elif cbo > 10:
+        score += 8
+        reasons.append(
+            "High Coupling Between Objects (CBO)"
+        )
+
+    # LCOM
+    if lcom > 0.70:
         score += 15
-        reasons.append("High Lack of Cohesion (LCOM)")
+        reasons.append(
+            "High Lack of Cohesion (LCOM)"
+        )
 
-    # 6. Code Churn
+    elif lcom > 0.40:
+        score += 8
+        reasons.append(
+            "High Lack of Cohesion (LCOM)"
+        )
+
+    # Code Churn
     if churn > 600:
         score += 10
-        reasons.append("High Code Churn")
+        reasons.append(
+            "High Code Churn"
+        )
 
-    # 7. Past Defects
+    elif churn >= 300:
+        score += 5
+        reasons.append(
+            "High Code Churn"
+        )
+
+    # Past Defects
     if past_defects > 25:
         score += 15
-        reasons.append("High Past Defects")
+        reasons.append(
+            "High Past Defects"
+        )
 
-    # 8. Security Vulnerabilities
-    if security_vulnerabilities > 0:
+    elif past_defects > 10:
+        score += 8
+        reasons.append(
+            "High Past Defects"
+        )
+
+    # Security Vulnerabilities
+    if security >= 3:
         score += 20
-        reasons.append("Security Vulnerabilities Detected")
+        reasons.append(
+            "Security Vulnerabilities Detected"
+        )
 
-    # Limit score to 100
-    score = min(score, 100)
+    elif security > 0:
+        score += 20
+        reasons.append(
+            "Security Vulnerabilities Detected"
+        )
 
-    # Risk Classification
+    score = min(
+        int(score),
+        100
+    )
+
     if score >= 61:
-        level = "High Technical Debt"
-    elif score >= 31:
-        level = "Medium Technical Debt"
-    else:
-        level = "Low Technical Debt"
+        debt_level = (
+            "High Technical Debt"
+        )
 
-    if len(reasons) == 0:
-        reasons.append("Software metrics are within acceptable limits.")
+    elif score >= 31:
+        debt_level = (
+            "Medium Technical Debt"
+        )
+
+    else:
+        debt_level = (
+            "Low Technical Debt"
+        )
+
+    if not reasons:
+        reasons.append(
+            "Software metrics are within acceptable limits."
+        )
 
     return {
         "Debt Score": score,
-        "Debt Level": level,
+        "Debt Level": debt_level,
         "Reasons": reasons
     }
