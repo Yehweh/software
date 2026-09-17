@@ -2,8 +2,12 @@ import os
 import zipfile
 import uuid
 
-from src.code_metrics import calculate_python_metrics
+from src.code_metrics import (
+    calculate_python_metrics,
+    calculate_metrics_for_file
+)
 from src.technical_debt_engine import calculate_technical_debt
+
 
 
 # Source-code file types that our analyzer can currently read
@@ -12,10 +16,15 @@ SUPPORTED_EXTENSIONS = {
     ".java",
     ".c",
     ".cpp",
+    ".cc",
+    ".cxx",
     ".h",
     ".hpp",
+    ".hh",
+    ".hxx",
     ".js",
     ".html",
+    ".htm",
     ".css",
 }
 
@@ -155,52 +164,55 @@ def analyze_project(zip_path):
             ]
 
             # =================================================
-            # CREATE FILE INFORMATION
+            # CREATE FILE INFORMATION & MULTI-LANGUAGE ANALYSIS
             # =================================================
 
-            file_data = {
-
-                "name": filename,
-
-                "path": relative_path,
-
-                "extension": extension,
-
-                "lines": len(code_lines),
-
-                "metrics": {},
-
-                "technical_debt": {}
-
+            LANGUAGE_MAP = {
+                ".py": "Python",
+                ".js": "JavaScript",
+                ".html": "HTML",
+                ".htm": "HTML",
+                ".css": "CSS",
+                ".java": "Java",
+                ".c": "C",
+                ".h": "C",
+                ".cpp": "C++",
+                ".cc": "C++",
+                ".cxx": "C++",
+                ".hpp": "C++",
+                ".hh": "C++",
+                ".hxx": "C++",
             }
 
-            # =================================================
-            # PYTHON ANALYSIS
-            # =================================================
+            language = LANGUAGE_MAP.get(
+                extension,
+                extension[1:].upper() if extension else "Unknown"
+            )
 
-            if extension == ".py":
+            metrics = calculate_metrics_for_file(
+                content,
+                extension
+            )
 
-                # ---------------------------------------------
-                # Calculate quality metrics
-                # ---------------------------------------------
+            debt_result = calculate_technical_debt(
+                metrics
+            )
 
-                metrics = calculate_python_metrics(
-                    content
-                )
+            file_lines = (
+                metrics.get("lines_of_code", len(code_lines))
+                if metrics and metrics.get("lines_of_code", 0) > 0
+                else len(code_lines)
+            )
 
-                file_data["metrics"] = metrics
-
-                # ---------------------------------------------
-                # Calculate technical debt
-                # ---------------------------------------------
-
-                debt_result = calculate_technical_debt(
-                    metrics
-                )
-
-                file_data["technical_debt"] = (
-                    debt_result
-                )
+            file_data = {
+                "name": filename,
+                "path": relative_path,
+                "extension": extension,
+                "language": language,
+                "lines": file_lines,
+                "metrics": metrics,
+                "technical_debt": debt_result
+            }
 
             # =================================================
             # ADD FILE

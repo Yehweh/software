@@ -40,6 +40,51 @@
     </div>
 
 
+    <!-- =====================================================
+         NAVIGATION OPTIONS (DASHBOARD, ABOUT METRICS, BENCHMARK)
+    ====================================================== -->
+
+    <nav class="dashboard-nav" aria-label="Dashboard Navigation">
+
+        <a
+            href="#dashboard"
+            class="nav-tab active"
+            data-tab="dashboard"
+        >
+            <span class="nav-tab-icon">📊</span>
+            <span>Dashboard</span>
+        </a>
+
+        <a
+            href="#about-metrics"
+            class="nav-tab"
+            data-tab="about-metrics"
+        >
+            <span class="nav-tab-icon">📖</span>
+            <span>About Metrics</span>
+        </a>
+
+        <a
+            href="#benchmark"
+            class="nav-tab"
+            data-tab="benchmark"
+        >
+            <span class="nav-tab-icon">📑</span>
+            <span>Baseline Benchmark</span>
+        </a>
+
+        <a
+            href="#compare"
+            class="nav-tab"
+            data-tab="compare"
+        >
+            <span class="nav-tab-icon">⚖️</span>
+            <span>Compare</span>
+        </a>
+
+    </nav>
+
+
     <div class="dashboard-user">
 
         <span>
@@ -60,10 +105,72 @@
 
 
 <!-- =========================================================
-     MAIN DASHBOARD
+     MAIN DASHBOARD CONTAINER
 ========================================================= -->
 
 <main class="dashboard-container">
+
+
+<!-- =========================================================
+     FLASH MESSAGES
+========================================================= -->
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+
+    {% if messages %}
+
+        {% for category, message in messages %}
+
+            <div class="auth-message {{ category }}">
+
+                {% if category == "success" %}
+
+                    <span class="message-icon">
+                        ✓
+                    </span>
+
+                {% else %}
+
+                    <span class="message-icon">
+                        !
+                    </span>
+
+                {% endif %}
+
+
+                <div class="message-content">
+
+                    <strong>
+
+                        {% if category == "success" %}
+                            Success
+                        {% else %}
+                            Notice
+                        {% endif %}
+
+                    </strong>
+
+                    <span>
+                        {{ message }}
+                    </span>
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+{% endwith %}
+
+
+
+<!-- =========================================================
+     VIEW 1: DASHBOARD (PROJECT SCAN & RESULTS)
+========================================================= -->
+
+<div id="view-dashboard" class="dashboard-view-pane active-view">
 
 
 <!-- =========================================================
@@ -226,7 +333,7 @@
             type="file"
             id="project_file"
             name="project_file"
-            accept=".zip"
+            accept=".zip,application/zip,application/x-zip-compressed,application/octet-stream"
             required
         >
 
@@ -286,81 +393,81 @@
     </div>
 
 
-    <div class="project-summary">
-
+    <div class="overview-grid">
 
         <!-- SOURCE FILES -->
-
-        <div class="project-summary-card">
-
-            <span>
-                Source Files
-            </span>
-
-            <strong>
-                {{ project.file_count }}
-            </strong>
-
+        <div class="overview-card">
+            <div class="overview-icon">
+                📁
+            </div>
+            <div>
+                <span>
+                    Source Files
+                </span>
+                <strong>
+                    {{ project.file_count }}
+                </strong>
+            </div>
         </div>
-
 
         <!-- TOTAL LINES -->
-
-        <div class="project-summary-card">
-
-            <span>
-                Total Code Lines
-            </span>
-
-            <strong>
-                {{ project.total_lines }}
-            </strong>
-
+        <div class="overview-card">
+            <div class="overview-icon">
+                📄
+            </div>
+            <div>
+                <span>
+                    Total Code Lines
+                </span>
+                <strong>
+                    {{ project.total_lines }}
+                </strong>
+            </div>
         </div>
 
-
-        <!-- PYTHON FILES -->
-
-        <div class="project-summary-card">
-
-            <span>
-                Python Files
-            </span>
-
-            <strong>
-                {{ project_metrics.python_files if project_metrics else 0 }}
-            </strong>
-
+        <!-- LANGUAGES / PYTHON FILES -->
+        <div class="overview-card">
+            <div class="overview-icon">
+                {% if project_metrics and project_metrics.python_files and project_metrics.language_count == 1 %}🐍{% else %}💻{% endif %}
+            </div>
+            <div>
+                <span>
+                    {% if project_metrics and project_metrics.python_files and project_metrics.language_count == 1 %}Python Files{% else %}Languages{% endif %}
+                </span>
+                <strong>
+                    {% if project_metrics and project_metrics.python_files and project_metrics.language_count == 1 %}{{ project_metrics.python_files }}{% else %}{{ project_metrics.language_count if project_metrics else 0 }}{% endif %}
+                </strong>
+            </div>
         </div>
-
 
         <!-- ANALYZED FILES -->
-
-        <div class="project-summary-card">
-
-            <span>
-                Files Analysed
-            </span>
-
-            <strong>
-                {{ project_metrics.analyzed_files if project_metrics else 0 }}
-            </strong>
-
+        <div class="overview-card">
+            <div class="overview-icon">
+                🔍
+            </div>
+            <div>
+                <span>
+                    Files Analysed
+                </span>
+                <strong>
+                    {{ project_metrics.analyzed_files if project_metrics else 0 }}
+                </strong>
+            </div>
         </div>
 
-
         <!-- PROJECT ID -->
-
-        <div class="project-summary-card">
-
-            <span>
-                Project ID
-            </span>
-
-            <strong>
-                {{ project.project_id }}
-            </strong>
-
+        <div class="overview-card">
+            <div class="overview-icon">
+                ⚡
+            </div>
+            <div>
+                <span>
+                    Project ID
+                </span>
+                <strong class="project-id">
+                    {{ project.project_id }}
+                </strong>
+            </div>
         </div>
 
     </div>
@@ -375,7 +482,7 @@
 
 {% if project_metrics %}
 
-<section class="dashboard-panel">
+<section class="dashboard-panel debt-overview-panel">
 
     <div class="panel-header">
 
@@ -409,109 +516,88 @@
     </p>
 
 
-    <div class="metric-list">
+    <div class="debt-summary-grid">
 
+        <!-- DEBT SCORE CARD -->
+        <div class="debt-score-card">
 
-        <!-- PROJECT RISK -->
-
-        <div class="metric-item">
-
-            <span>
-                Overall Project Risk
+            <span class="debt-card-label">
+                AVERAGE DEBT SCORE
             </span>
 
-            <strong>
+            <div>
+                <span class="debt-score-value">
+                    {{ project_metrics.average_debt_score }}
+                </span>
+                <span class="score-out-of">
+                    /100
+                </span>
+            </div>
 
+            <div class="score-bar">
+                <div class="score-bar-fill" style="width: {{ project_metrics.average_debt_score }}%;"></div>
+            </div>
+
+            <div style="margin-top: 18px;">
                 {% if project_metrics.project_debt_level == "High Technical Debt" %}
-
-                    HIGH
-
+                    <span class="overall-risk risk-high">
+                        HIGH OVERALL DEBT
+                    </span>
                 {% elif project_metrics.project_debt_level == "Medium Technical Debt" %}
-
-                    MEDIUM
-
+                    <span class="overall-risk risk-medium">
+                        MEDIUM OVERALL DEBT
+                    </span>
                 {% else %}
-
-                    LOW
-
+                    <span class="overall-risk risk-low">
+                        LOW OVERALL DEBT
+                    </span>
                 {% endif %}
-
-            </strong>
-
-        </div>
-
-
-        <!-- FILES ANALYZED -->
-
-        <div class="metric-item">
-
-            <span>
-                Files Analysed
-            </span>
-
-            <strong>
-                {{ project_metrics.analyzed_files }}
-            </strong>
+            </div>
 
         </div>
 
 
-        <!-- HIGH -->
+        <!-- RISK DISTRIBUTION CARD -->
+        <div class="risk-distribution-card">
 
-        <div class="metric-item">
+            <div class="risk-distribution-heading">
+                <span>
+                    RISK DISTRIBUTION
+                </span>
+                <span>
+                    {{ project_metrics.analyzed_files }} Files Analysed
+                </span>
+            </div>
 
-            <span>
-                High Debt Files
-            </span>
+            <div class="risk-row">
+                <div class="risk-row-label">
+                    <span class="risk-badge risk-high">
+                        HIGH
+                    </span>
+                    <span>High Debt Files</span>
+                </div>
+                <strong>{{ project_metrics.high_debt }}</strong>
+            </div>
 
-            <strong>
-                {{ project_metrics.high_debt }}
-            </strong>
+            <div class="risk-row">
+                <div class="risk-row-label">
+                    <span class="risk-badge risk-medium">
+                        MED
+                    </span>
+                    <span>Medium Debt Files</span>
+                </div>
+                <strong>{{ project_metrics.medium_debt }}</strong>
+            </div>
 
-        </div>
-
-
-        <!-- MEDIUM -->
-
-        <div class="metric-item">
-
-            <span>
-                Medium Debt Files
-            </span>
-
-            <strong>
-                {{ project_metrics.medium_debt }}
-            </strong>
-
-        </div>
-
-
-        <!-- LOW -->
-
-        <div class="metric-item">
-
-            <span>
-                Low Debt Files
-            </span>
-
-            <strong>
-                {{ project_metrics.low_debt }}
-            </strong>
-
-        </div>
-
-
-        <!-- AVERAGE SCORE -->
-
-        <div class="metric-item">
-
-            <span>
-                Average Debt Score
-            </span>
-
-            <strong>
-                {{ project_metrics.average_debt_score }}/100
-            </strong>
+            <div class="risk-row">
+                <div class="risk-row-label">
+                    <span class="risk-badge risk-low">
+                        LOW
+                    </span>
+                    <span>Low Debt Files</span>
+                </div>
+                <strong>{{ project_metrics.low_debt }}</strong>
+            </div>
 
         </div>
 
@@ -561,156 +647,98 @@
     </p>
 
 
-    <div class="metric-list">
+    <div class="quality-metrics-grid">
 
-
-        <!-- LOC -->
-
-        <div class="metric-item">
-
-            <span>
-                Lines of Code
-            </span>
-
-            <strong>
-                {{ project_metrics.total_lines }}
-            </strong>
-
+        <div class="quality-card">
+            <span>Lines of Code</span>
+            <strong>{{ project_metrics.total_lines }}</strong>
+            <small>Total project volume</small>
         </div>
 
-
-        <!-- FUNCTIONS -->
-
-        <div class="metric-item">
-
-            <span>
-                Number of Functions
-            </span>
-
-            <strong>
-                {{ project_metrics.total_functions }}
-            </strong>
-
+        <div class="quality-card">
+            <span>Functions</span>
+            <strong>{{ project_metrics.total_functions }}</strong>
+            <small>Declared subroutines</small>
         </div>
 
-
-        <!-- CLASSES -->
-
-        <div class="metric-item">
-
-            <span>
-                Number of Classes
-            </span>
-
-            <strong>
-                {{ project_metrics.total_classes }}
-            </strong>
-
+        <div class="quality-card">
+            <span>Classes</span>
+            <strong>{{ project_metrics.total_classes }}</strong>
+            <small>Object definitions</small>
         </div>
 
-
-        <!-- IMPORTS -->
-
-        <div class="metric-item">
-
-            <span>
-                Imports / Dependencies
-            </span>
-
-            <strong>
-                {{ project_metrics.total_imports }}
-            </strong>
-
+        <div class="quality-card">
+            <span>Dependencies</span>
+            <strong>{{ project_metrics.total_imports }}</strong>
+            <small>Imports / modules</small>
         </div>
 
-
-        <!-- COMMENT DENSITY -->
-
-        <div class="metric-item">
-
-            <span>
-                Average Comment Density
-            </span>
-
-            <strong>
-                {{ project_metrics.average_comment_density }}%
-            </strong>
-
+        <div class="quality-card">
+            <span>Comment Density</span>
+            <strong>{{ project_metrics.average_comment_density }}%</strong>
+            <small>Documentation ratio</small>
         </div>
 
-
-        <!-- FUNCTION LENGTH -->
-
-        <div class="metric-item">
-
-            <span>
-                Average Function Length
-            </span>
-
-            <strong>
-                {{ project_metrics.average_function_length }}
-            </strong>
-
+        <div class="quality-card">
+            <span>Avg Function Length</span>
+            <strong>{{ project_metrics.average_function_length }}</strong>
+            <small>Lines per function</small>
         </div>
 
-
-        <!-- COMPLEXITY -->
-
-        <div class="metric-item">
-
-            <span>
-                Average Cyclomatic Complexity
-            </span>
-
-            <strong>
-                {{ project_metrics.cyclomatic_complexity }}
-            </strong>
-
+        <div class="quality-card">
+            <span>Avg Complexity</span>
+            <strong>{{ project_metrics.cyclomatic_complexity }}</strong>
+            <small>Cyclomatic score</small>
         </div>
 
-
-        <!-- NESTING -->
-
-        <div class="metric-item">
-
-            <span>
-                Maximum Nesting Depth
-            </span>
-
-            <strong>
-                {{ project_metrics.max_nesting_depth }}
-            </strong>
-
+        <div class="quality-card">
+            <span>Max Nesting</span>
+            <strong>{{ project_metrics.max_nesting_depth }}</strong>
+            <small>Deepest indentation</small>
         </div>
 
-
-        <!-- TODO -->
-
-        <div class="metric-item">
-
-            <span>
-                TODO Items
-            </span>
-
-            <strong>
-                {{ project_metrics.todo_count }}
-            </strong>
-
+        <div class="quality-card">
+            <span>TODO Markers</span>
+            <strong>{{ project_metrics.todo_count }}</strong>
+            <small>Unresolved tasks</small>
         </div>
 
+        <div class="quality-card">
+            <span>FIXME Markers</span>
+            <strong>{{ project_metrics.fixme_count }}</strong>
+            <small>Known bug tags</small>
+        </div>
 
-        <!-- FIXME -->
+        <div class="quality-card">
+            <span>Coupling (CBO)</span>
+            <strong>{{ project_metrics.average_cbo }}</strong>
+            <small>Avg object dependencies</small>
+        </div>
 
-        <div class="metric-item">
+        <div class="quality-card">
+            <span>Cohesion Deficit (LCOM)</span>
+            <strong>{{ project_metrics.average_lcom }}</strong>
+            <small>Lack of cohesion ratio</small>
+        </div>
 
-            <span>
-                FIXME Items
-            </span>
-
-            <strong>
-                {{ project_metrics.fixme_count }}
+        <div class="quality-card">
+            <span>Security Issues</span>
+            <strong style="color: {% if project_metrics.total_security_vulnerabilities > 0 %}#f87171{% else %}inherit{% endif %};">
+                {{ project_metrics.total_security_vulnerabilities }}
             </strong>
+            <small>Vulnerabilities detected</small>
+        </div>
 
+        <div class="quality-card">
+            <span>Past Defects</span>
+            <strong>{{ project_metrics.total_past_defects }}</strong>
+            <small>Bug & defect markers</small>
+        </div>
+
+        <div class="quality-card">
+            <span>Code Churn</span>
+            <strong>{{ project_metrics.total_code_churn }}</strong>
+            <small>Revision volatility</small>
         </div>
 
     </div>
@@ -718,7 +746,6 @@
 </section>
 
 {% endif %}
-
 
 
 <!-- =========================================================
@@ -757,10 +784,9 @@
 
     <p class="panel-description">
 
-        Each source file is inspected individually.
-        Python files receive structural static analysis,
-        while other detected file types are listed for
-        project coverage.
+        Each source file is inspected individually using
+        multi-language static analysis, measuring complexity,
+        functions, and technical debt.
 
     </p>
 
@@ -855,7 +881,7 @@
                             C
                         </span>
 
-                    {% elif file.extension in [".cpp", ".hpp"] %}
+                    {% elif file.extension in [".cpp", ".hpp", ".cc", ".cxx", ".hh", ".hxx"] %}
 
                         <span class="reason-tag">
                             C++
@@ -867,7 +893,7 @@
                             JavaScript
                         </span>
 
-                    {% elif file.extension == ".html" %}
+                    {% elif file.extension in [".html", ".htm"] %}
 
                         <span class="reason-tag">
                             HTML
@@ -882,7 +908,7 @@
                     {% else %}
 
                         <span class="reason-tag">
-                            {{ file.extension }}
+                            {{ file.language | default(file.extension, true) }}
                         </span>
 
                     {% endif %}
@@ -895,7 +921,7 @@
                 ================================================== -->
 
                 <td>
-                    {{ file.lines }}
+                    {{ file.lines | default(0, true) }}
                 </td>
 
 
@@ -907,7 +933,7 @@
 
                     {% if file.metrics %}
 
-                        {{ file.metrics.num_functions }}
+                        {{ file.metrics.num_functions | default(0, true) }}
 
                     {% else %}
 
@@ -926,7 +952,7 @@
 
                     {% if file.metrics %}
 
-                        {{ file.metrics.cyclomatic_complexity }}
+                        {{ file.metrics.cyclomatic_complexity | default(1, true) }}
 
                     {% else %}
 
@@ -946,7 +972,7 @@
                     {% if file.technical_debt %}
 
                         <strong>
-                            {{ file.technical_debt.score }}/100
+                            {{ file.technical_debt.score | default(0, true) }}/100
                         </strong>
 
                     {% else %}
@@ -1044,7 +1070,7 @@
 
 
 <!-- =========================================================
-     DETAILED PYTHON ANALYSIS
+     DETAILED FILE QUALITY ANALYSIS
 ========================================================= -->
 
 <section class="dashboard-panel">
@@ -1058,7 +1084,7 @@
             </p>
 
             <h2>
-                Python File Quality Analysis
+                Source File Quality Analysis
             </h2>
 
         </div>
@@ -1074,21 +1100,21 @@
     <p class="panel-description">
 
         Detailed structural measurements calculated
-        from Python source files using static analysis.
+        from project source files using static analysis.
 
     </p>
 
 
     <div class="table-wrapper">
 
-        <table>
+        <table id="qualityMetricsTable" class="quality-metrics-table">
 
             <thead>
 
                 <tr>
 
-                    <th>
-                        Python File
+                    <th class="col-source-file">
+                        Source File
                     </th>
 
                     <th>
@@ -1131,6 +1157,26 @@
                         FIXME
                     </th>
 
+                    <th>
+                        CBO
+                    </th>
+
+                    <th>
+                        LCOM
+                    </th>
+
+                    <th>
+                        Security
+                    </th>
+
+                    <th>
+                        Defects
+                    </th>
+
+                    <th>
+                        Churn
+                    </th>
+
                 </tr>
 
             </thead>
@@ -1150,7 +1196,7 @@
 
                     <!-- FILE -->
 
-                    <td>
+                    <td class="col-source-file">
 
                         <strong class="file-name">
                             {{ file.path }}
@@ -1162,70 +1208,111 @@
                     <!-- LOC -->
 
                     <td>
-                        {{ file.lines }}
+                        {{ file.lines | default(0, true) }}
                     </td>
 
 
                     <!-- COMMENT DENSITY -->
 
                     <td>
-                        {{ file.metrics.comment_density }}%
+                        {{ file.metrics.comment_density | default(0, true) }}%
                     </td>
 
 
                     <!-- FUNCTIONS -->
 
                     <td>
-                        {{ file.metrics.num_functions }}
+                        {{ file.metrics.num_functions | default(0, true) }}
                     </td>
 
 
                     <!-- AVG FUNCTION LENGTH -->
 
                     <td>
-                        {{ file.metrics.avg_function_length }}
+                        {{ file.metrics.avg_function_length | default(0, true) }}
                     </td>
 
 
                     <!-- MAX FUNCTION LENGTH -->
 
                     <td>
-                        {{ file.metrics.max_function_length }}
+                        {{ file.metrics.max_function_length | default(0, true) }}
                     </td>
 
 
                     <!-- COMPLEXITY -->
 
                     <td>
-                        {{ file.metrics.cyclomatic_complexity }}
+                        {{ file.metrics.cyclomatic_complexity | default(1, true) }}
                     </td>
 
 
                     <!-- NESTING -->
 
                     <td>
-                        {{ file.metrics.max_nesting_depth }}
+                        {{ file.metrics.max_nesting_depth | default(0, true) }}
                     </td>
 
 
                     <!-- IMPORTS -->
 
                     <td>
-                        {{ file.metrics.num_imports }}
+                        {{ file.metrics.num_imports | default(0, true) }}
                     </td>
 
 
                     <!-- TODO -->
 
                     <td>
-                        {{ file.metrics.todo_count }}
+                        {{ file.metrics.todo_count | default(0, true) }}
                     </td>
 
 
                     <!-- FIXME -->
 
                     <td>
-                        {{ file.metrics.fixme_count }}
+                        {{ file.metrics.fixme_count | default(0, true) }}
+                    </td>
+
+
+                    <!-- CBO -->
+
+                    <td>
+                        {{ file.metrics.coupling_between_objects | default(0, true) }}
+                    </td>
+
+
+                    <!-- LCOM -->
+
+                    <td>
+                        {{ file.metrics.lack_of_cohesion | default(0, true) }}
+                    </td>
+
+
+                    <!-- SECURITY -->
+
+                    <td>
+                        {% if file.metrics.security_vulnerabilities and file.metrics.security_vulnerabilities > 0 %}
+                            <span class="risk-badge risk-high" title="{{ file.metrics.security_details | join(', ') if file.metrics.security_details else '' }}">
+                                {{ file.metrics.security_vulnerabilities }} Vuln
+                            </span>
+                        {% else %}
+                            0
+                        {% endif %}
+                    </td>
+
+
+                    <!-- DEFECTS -->
+
+                    <td>
+                        {{ file.metrics.past_defects | default(0, true) }}
+                    </td>
+
+
+                    <!-- CHURN -->
+
+                    <td>
+                        {{ file.metrics.code_churn | default(0, true) }}
                     </td>
 
 
@@ -1292,224 +1379,911 @@
 
         <div class="source-file-row">
 
+            <div class="source-file-main">
 
-            <div>
-
-                <strong>
-                    {{ file.path }}
-                </strong>
-
-
-                <span>
-
+                <div class="source-file-icon">
                     {% if file.extension == ".py" %}
-                        Python
+                        PY
                     {% elif file.extension == ".java" %}
-                        Java
+                        JAVA
                     {% elif file.extension in [".c", ".h"] %}
                         C
-                    {% elif file.extension in [".cpp", ".hpp"] %}
+                    {% elif file.extension in [".cpp", ".hpp", ".cc", ".cxx", ".hh", ".hxx"] %}
                         C++
                     {% elif file.extension == ".js" %}
-                        JavaScript
-                    {% elif file.extension == ".html" %}
+                        JS
+                    {% elif file.extension in [".html", ".htm"] %}
                         HTML
                     {% elif file.extension == ".css" %}
                         CSS
                     {% else %}
-                        {{ file.extension }}
+                        FILE
                     {% endif %}
+                </div>
 
-                </span>
+                <div class="source-file-details">
+                    <strong>
+                        {{ file.path }}
+                    </strong>
+                    <span>
+                        {% if file.extension == ".py" %}
+                            Python Source File
+                        {% elif file.extension == ".java" %}
+                            Java Source File
+                        {% elif file.extension in [".c", ".h"] %}
+                            C Source File
+                        {% elif file.extension in [".cpp", ".hpp", ".cc", ".cxx", ".hh", ".hxx"] %}
+                            C++ Source File
+                        {% elif file.extension == ".js" %}
+                            JavaScript File
+                        {% elif file.extension in [".html", ".htm"] %}
+                            HTML Template
+                        {% elif file.extension == ".css" %}
+                            CSS Stylesheet
+                        {% else %}
+                            {{ file.language | default(file.extension, true) }} File
+                        {% endif %}
+                    </span>
+                </div>
 
             </div>
 
-
-            <span>
-                {{ file.lines }} lines
-            </span>
-
+            <div class="source-file-meta">
+                <span class="file-lines">
+                    {{ file.lines }} lines
+                </span>
+                {% if file.metrics %}
+                    <span class="inventory-status analyzed">ANALYZED</span>
+                {% else %}
+                    <span class="inventory-status inventory">DISCOVERED</span>
+                {% endif %}
+            </div>
 
         </div>
 
-
     {% endfor %}
-
 
     </div>
 
 </section>
 
-
-
 {% else %}
-
 
 <!-- =========================================================
      NO PROJECT STATE
 ========================================================= -->
 
-<section class="dashboard-panel">
+<section class="dashboard-panel empty-project-panel">
 
-    <div class="panel-header">
-
-        <div>
-
-            <p class="panel-label">
-                PROJECT STATUS
-            </p>
-
-            <h2>
-                No Project Analyzed
-            </h2>
-
-        </div>
-
-
-        <span class="status-badge">
-            WAITING
-        </span>
-
+    <div class="empty-project-icon">
+        ⚡
     </div>
 
+    <h2>
+        No Project Analyzed Yet
+    </h2>
 
     <p class="panel-description">
-
         Upload a software project ZIP file above to begin
-        source-code quality analysis.
-
+        source-code quality analysis and compute technical debt.
     </p>
 
 </section>
 
-
 {% endif %}
+
+</div>
+<!-- =========================================================
+     END VIEW 1: DASHBOARD
+========================================================= -->
+
+
+
+<!-- =========================================================
+     VIEW 2: ABOUT METRICS
+========================================================= -->
+
+<div id="view-about-metrics" class="dashboard-view-pane">
+
+    <section class="dashboard-heading">
+
+        <div class="view-header-flex">
+
+            <div>
+
+                <p class="auth-label">
+                    METRICS SPECIFICATION
+                </p>
+
+                <h1>
+                    ABOUT THE METRICS
+                </h1>
+
+                <p class="about-subtitle">
+                    A quick guide to the indicators used to assess technical debt.
+                </p>
+
+            </div>
+
+            <div>
+
+                <button
+                    type="button"
+                    class="back-to-dashboard-btn"
+                    onclick="switchDashboardTab('dashboard')"
+                >
+                    ← Back to Dashboard
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <div class="about-metrics-grid">
+
+        <!-- 1. Cyclomatic Complexity -->
+        <div class="about-metric-card">
+
+            <div class="about-card-top">
+                <span class="about-metric-badge">01</span>
+                <span class="about-metric-icon">🔄</span>
+            </div>
+
+            <h3>Cyclomatic Complexity</h3>
+
+            <p>
+                Measures the number of independent paths through the code. Higher complexity generally means code is harder to test, maintain, and understand.
+            </p>
+
+        </div>
+
+
+        <!-- 2. Code Duplication -->
+        <div class="about-metric-card">
+
+            <div class="about-card-top">
+                <span class="about-metric-badge">02</span>
+                <span class="about-metric-icon">📋</span>
+            </div>
+
+            <h3>Code Duplication</h3>
+
+            <p>
+                Percentage of repeated logic across the codebase. High duplication increases maintenance overhead and the risk of inconsistent bug fixes.
+            </p>
+
+        </div>
+
+
+        <!-- 3. Test Coverage -->
+        <div class="about-metric-card">
+
+            <div class="about-card-top">
+                <span class="about-metric-badge">03</span>
+                <span class="about-metric-icon">🧪</span>
+            </div>
+
+            <h3>Test Coverage</h3>
+
+            <p>
+                Proportion of code exercised by automated tests. Low test coverage leaves critical paths vulnerable to undetected regressions.
+            </p>
+
+        </div>
+
+
+        <!-- 4. Coupling (CBO) -->
+        <div class="about-metric-card">
+
+            <div class="about-card-top">
+                <span class="about-metric-badge">04</span>
+                <span class="about-metric-icon">🔗</span>
+            </div>
+
+            <h3>Coupling (CBO)</h3>
+
+            <p>
+                Measures how heavily classes or modules depend on each other. Tightly coupled code is fragile and difficult to isolate or refactor.
+            </p>
+
+        </div>
+
+
+        <!-- 5. Cohesion Deficit (LCOM) -->
+        <div class="about-metric-card">
+
+            <div class="about-card-top">
+                <span class="about-metric-badge">05</span>
+                <span class="about-metric-icon">🧩</span>
+            </div>
+
+            <h3>Cohesion Deficit (LCOM)</h3>
+
+            <p>
+                Identifies classes whose methods don't operate on shared data. High LCOM points to "God classes" that violate the Single Responsibility Principle.
+            </p>
+
+        </div>
+
+
+        <!-- 6. Code Churn -->
+        <div class="about-metric-card">
+
+            <div class="about-card-top">
+                <span class="about-metric-badge">06</span>
+                <span class="about-metric-icon">⚡</span>
+            </div>
+
+            <h3>Code Churn</h3>
+
+            <p>
+                Tracks how frequently files are modified. High churn combined with high complexity is one of the strongest predictors of technical debt.
+            </p>
+
+        </div>
+
+
+        <!-- 7. Past Defects -->
+        <div class="about-metric-card">
+
+            <div class="about-card-top">
+                <span class="about-metric-badge">07</span>
+                <span class="about-metric-icon">🐛</span>
+            </div>
+
+            <h3>Past Defects</h3>
+
+            <p>
+                Historical bug count associated with a module. Areas with repeated past defects are prone to recurrent instability.
+            </p>
+
+        </div>
+
+
+        <!-- 8. Security Vulnerabilities -->
+        <div class="about-metric-card">
+
+            <div class="about-card-top">
+                <span class="about-metric-badge">08</span>
+                <span class="about-metric-icon">🛡️</span>
+            </div>
+
+            <h3>Security Vulnerabilities</h3>
+
+            <p>
+                Known security weaknesses or risky coding patterns. Vulnerabilities represent high-risk debt requiring immediate remediation.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+<!-- =========================================================
+     END VIEW 2: ABOUT METRICS
+========================================================= -->
+
+
+
+<!-- =========================================================
+     VIEW 3: BASELINE BENCHMARK
+========================================================= -->
+
+<div id="view-benchmark" class="dashboard-view-pane">
+
+    <section class="dashboard-heading">
+
+        <div class="view-header-flex">
+
+            <div>
+
+                <p class="auth-label">
+                    HISTORICAL BENCHMARK INTELLIGENCE
+                </p>
+
+                <h1>
+                    Baseline Benchmark Dataset
+                </h1>
+
+                <p class="about-subtitle">
+                    Historical defect prediction baseline records evaluated by the multi-criteria Rule Engine.
+                </p>
+
+            </div>
+
+            <div>
+
+                <button
+                    type="button"
+                    class="back-to-dashboard-btn"
+                    onclick="switchDashboardTab('dashboard')"
+                >
+                    ← Back to Dashboard
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- Benchmark Stat Overview Cards -->
+    <div class="overview-grid" style="margin-bottom: 25px;">
+
+        <div class="overview-card">
+            <div class="overview-icon">📊</div>
+            <div>
+                <span class="overview-card-label">TOTAL RECORDS</span>
+                <strong>{{ results|length if results else 0 }}</strong>
+                <small>Benchmark baseline sample</small>
+            </div>
+        </div>
+
+        <div class="overview-card">
+            <div class="overview-icon" style="color: #f87171;">⚠️</div>
+            <div>
+                <span class="overview-card-label">HIGH DEBT</span>
+                <strong style="color: #f87171;">{{ high if high is defined else 0 }}</strong>
+                <small>Critical remediation</small>
+            </div>
+        </div>
+
+        <div class="overview-card">
+            <div class="overview-icon" style="color: #fbbf24;">⚡</div>
+            <div>
+                <span class="overview-card-label">MEDIUM DEBT</span>
+                <strong style="color: #fbbf24;">{{ medium if medium is defined else 0 }}</strong>
+                <small>Watchlist modules</small>
+            </div>
+        </div>
+
+        <div class="overview-card">
+            <div class="overview-icon" style="color: #4ade80;">✓</div>
+            <div>
+                <span class="overview-card-label">LOW DEBT</span>
+                <strong style="color: #4ade80;">{{ low if low is defined else 0 }}</strong>
+                <small>Healthy architecture</small>
+            </div>
+        </div>
+
+    </div>
+
+
+    {% if results %}
+
+    <section class="dashboard-panel results-panel">
+
+        <div class="panel-header">
+
+            <div>
+
+                <p class="panel-label">
+                    BASELINE BENCHMARK DATASET
+                </p>
+
+                <h2>
+                    Software Defect Prediction Register
+                </h2>
+
+            </div>
+
+            <div class="search-container">
+
+                <input
+                    type="text"
+                    id="search"
+                    placeholder="Search module ID or text..."
+                >
+
+            </div>
+
+        </div>
+
+        <div class="table-introduction">
+            <div>
+                <strong>Historical defect prediction baseline records (Rule Engine evaluation)</strong>
+                <span>Search by exact module ID (e.g. 1) or filter by debt level and triggered metric findings</span>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+
+            <table id="datasetTable">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Module ID
+                        </th>
+
+                        <th>
+                            Debt Score
+                        </th>
+
+                        <th>
+                            Risk Level
+                        </th>
+
+                        <th>
+                            Triggered Metric Findings
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for item in results %}
+
+                    <tr>
+
+                        <td class="numeric-cell">
+                            <strong>{{ item.record }}</strong>
+                        </td>
+
+                        <td>
+                            <div class="debt-score-cell">
+                                <strong>{{ item.score }}</strong>
+                                <span>/100</span>
+                            </div>
+                        </td>
+
+                        <td>
+
+                            {% if item.level == "High Technical Debt" %}
+
+                                <span class="risk-badge risk-high">
+                                    HIGH
+                                </span>
+
+                            {% elif item.level == "Medium Technical Debt" %}
+
+                                <span class="risk-badge risk-medium">
+                                    MEDIUM
+                                </span>
+
+                            {% else %}
+
+                                <span class="risk-badge risk-low">
+                                    LOW
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td class="findings-cell">
+
+                            {% for reason in item.reasons %}
+
+                                <span class="reason-tag">
+                                    {{ reason }}
+                                </span>
+
+                            {% endfor %}
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+    {% else %}
+
+    <section class="dashboard-panel empty-project-panel">
+        <div class="empty-project-icon">📑</div>
+        <h2>No Baseline Data Available</h2>
+        <p class="panel-description">Baseline benchmark records could not be loaded from dataset.</p>
+    </section>
+
+    {% endif %}
+
+</div>
+<!-- =========================================================
+     END VIEW 3: BASELINE BENCHMARK
+========================================================= -->
+
+
+<!-- =========================================================
+     VIEW 4: TECHNICAL DEBT COMPARISON
+========================================================= -->
+<div id="view-compare" class="dashboard-view">
+
+    <!-- =====================================================
+         DUAL UPLOAD PANEL
+    ====================================================== -->
+    <section class="dashboard-panel">
+
+        <div class="panel-header">
+            <div>
+                <p class="panel-label">
+                    SIDE-BY-SIDE EVALUATION
+                </p>
+                <h2>
+                    Compare Technical Debt
+                </h2>
+            </div>
+            <span class="status-badge">
+                DUAL COMPARATOR
+            </span>
+        </div>
+
+        <p class="panel-description">
+            Upload two software projects (ZIP archives) or individual source code files (.py, .js, .html, .css, .java, .c, .cpp) to calculate side-by-side code quality metrics, assess technical debt differentials, and identify which candidate has lower debt.
+        </p>
+
+        <form
+            action="{{ url_for('compare_files') }}"
+            method="POST"
+            enctype="multipart/form-data"
+            class="compare-form"
+        >
+
+            <div class="compare-upload-grid">
+
+                <!-- CANDIDATE A -->
+                <div class="compare-upload-box">
+                    <div class="compare-box-header">
+                        <span class="compare-pill pill-a">Candidate A</span>
+                        <h3>Baseline / Version A</h3>
+                        <p>Select the first project ZIP or source file</p>
+                    </div>
+
+                    <div class="file-input-wrapper">
+                        <input
+                            type="file"
+                            name="file_a"
+                            id="file_a"
+                            class="compare-file-input"
+                            required
+                        >
+                        <label for="file_a" class="compare-file-label">
+                            <span class="upload-icon">📁</span>
+                            <span class="file-chosen-text" id="label_file_a">Choose File or ZIP A</span>
+                            <span class="file-hint">ZIP, Python, JS, HTML, CSS, Java, C/C++</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="compare-vs-divider">
+                    <span>VS</span>
+                </div>
+
+                <!-- CANDIDATE B -->
+                <div class="compare-upload-box">
+                    <div class="compare-box-header">
+                        <span class="compare-pill pill-b">Candidate B</span>
+                        <h3>Target / Version B</h3>
+                        <p>Select the second project ZIP or source file</p>
+                    </div>
+
+                    <div class="file-input-wrapper">
+                        <input
+                            type="file"
+                            name="file_b"
+                            id="file_b"
+                            class="compare-file-input"
+                            required
+                        >
+                        <label for="file_b" class="compare-file-label">
+                            <span class="upload-icon">📁</span>
+                            <span class="file-chosen-text" id="label_file_b">Choose File or ZIP B</span>
+                            <span class="file-hint">ZIP, Python, JS, HTML, CSS, Java, C/C++</span>
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="compare-actions">
+                <button type="submit" class="analyze-button compare-submit-btn">
+                    Compare Technical Debt ➔
+                </button>
+                {% if comparison %}
+                <a href="{{ url_for('clear_comparison') }}" class="compare-clear-btn">
+                    Reset Comparison
+                </a>
+                {% endif %}
+            </div>
+
+        </form>
+
+    </section>
+
+
+    {% if comparison %}
+
+    <!-- =====================================================
+         SUMMARY REPORT & WINNER ANNOUNCEMENT BANNER
+    ====================================================== -->
+    <section class="dashboard-panel compare-summary-panel">
+
+        <div class="winner-banner {% if comparison.summary.winner == 'TIE' %}winner-tie{% elif comparison.summary.winner == 'A' %}winner-a{% else %}winner-b{% endif %}">
+
+            <div class="winner-header">
+                <div class="winner-title-group">
+                    <span class="winner-badge">EXECUTIVE SUMMARY REPORT</span>
+                    <h2 class="winner-headline">{{ comparison.summary.headline }}</h2>
+                </div>
+                {% if comparison.summary.diff_points > 0 %}
+                <div class="winner-score-diff">
+                    <span class="diff-number">-{{ comparison.summary.diff_points }}</span>
+                    <span class="diff-label">Debt Points ({{ comparison.summary.pct_improvement }}% Lower)</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="winner-scoreboard">
+                <div class="score-card score-card-a {% if comparison.summary.winner == 'A' %}is-winner{% endif %}">
+                    <span class="cand-label">Candidate A</span>
+                    <h3 class="cand-name">{{ comparison.item_a.name }}</h3>
+                    <div class="cand-score">{{ comparison.item_a.debt_score }}<span>/100</span></div>
+                    <span class="risk-badge {% if comparison.item_a.debt_level == 'High Technical Debt' %}risk-high{% elif comparison.item_a.debt_level == 'Medium Technical Debt' %}risk-medium{% else %}risk-low{% endif %}">
+                        {{ comparison.item_a.debt_level }}
+                    </span>
+                    <span class="cand-type">{{ comparison.item_a.type }} ({{ comparison.item_a.lines_of_code }} LOC)</span>
+                </div>
+
+                <div class="score-vs">VS</div>
+
+                <div class="score-card score-card-b {% if comparison.summary.winner == 'B' %}is-winner{% endif %}">
+                    <span class="cand-label">Candidate B</span>
+                    <h3 class="cand-name">{{ comparison.item_b.name }}</h3>
+                    <div class="cand-score">{{ comparison.item_b.debt_score }}<span>/100</span></div>
+                    <span class="risk-badge {% if comparison.item_b.debt_level == 'High Technical Debt' %}risk-high{% elif comparison.item_b.debt_level == 'Medium Technical Debt' %}risk-medium{% else %}risk-low{% endif %}">
+                        {{ comparison.item_b.debt_level }}
+                    </span>
+                    <span class="cand-type">{{ comparison.item_b.type }} ({{ comparison.item_b.lines_of_code }} LOC)</span>
+                </div>
+            </div>
+
+            <!-- Key Highlights / Rationale -->
+            <div class="winner-insights">
+                <h4>Key Drivers of Debt Difference:</h4>
+                <ul class="insights-list">
+                    {% for highlight in comparison.summary.highlights %}
+                    <li>
+                        <span class="insight-bullet">✔</span>
+                        <span>{{ highlight }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         METRIC DELTA DATA GRID
+    ====================================================== -->
+    <section class="dashboard-panel">
+
+        <div class="panel-header">
+            <div>
+                <p class="panel-label">DETAILED BREAKDOWN</p>
+                <h2>Metric Differential Comparison</h2>
+            </div>
+            <span class="status-badge">DELTA ANALYSIS</span>
+        </div>
+
+        <p class="panel-description">
+            Direct side-by-side comparison of measurable software quality indicators across both candidates.
+        </p>
+
+        <div class="table-wrapper">
+
+            <table id="comparisonMetricsTable" class="quality-metrics-table">
+
+                <thead>
+                    <tr>
+                        <th class="col-metric-name" style="text-align: left; width: 240px;">Metric Indicator</th>
+                        <th style="width: 170px;">Candidate A<br><span style="font-weight: 400; text-transform: none; color: #7f95bc;">{{ comparison.item_a.name }}</span></th>
+                        <th style="width: 170px;">Candidate B<br><span style="font-weight: 400; text-transform: none; color: #7f95bc;">{{ comparison.item_b.name }}</span></th>
+                        <th style="width: 120px;">Difference<br><span style="font-weight: 400; text-transform: none; color: #7f95bc;">(B - A)</span></th>
+                        <th style="width: 130px;">Advantage</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for m in comparison.metrics %}
+                    <tr>
+                        <td style="text-align: left; font-weight: 600; color: #eaf2ff;">
+                            {{ m.display_name }}
+                        </td>
+
+                        <td>
+                            {% if m.key == "debt_score" %}
+                                <strong style="font-size: 15px;">{{ m.value_a }}/100</strong>
+                            {% elif m.key == "comment_density" %}
+                                {{ m.value_a }}%
+                            {% else %}
+                                {{ m.value_a }}
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if m.key == "debt_score" %}
+                                <strong style="font-size: 15px;">{{ m.value_b }}/100</strong>
+                            {% elif m.key == "comment_density" %}
+                                {{ m.value_b }}%
+                            {% else %}
+                                {{ m.value_b }}
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if m.delta == 0 %}
+                                <span style="color: #8899b8;">0</span>
+                            {% elif m.direction == "lower_is_better" %}
+                                {% if m.delta < 0 %}
+                                    <span class="delta-badge delta-better">{{ m.delta }}</span>
+                                {% else %}
+                                    <span class="delta-badge delta-worse">+{{ m.delta }}</span>
+                                {% endif %}
+                            {% elif m.direction == "higher_is_better" %}
+                                {% if m.delta > 0 %}
+                                    <span class="delta-badge delta-better">+{{ m.delta }}</span>
+                                {% else %}
+                                    <span class="delta-badge delta-worse">{{ m.delta }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span style="color: #9ab0d4;">{{ "+" if m.delta > 0 else "" }}{{ m.delta }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if m.advantage == "A" %}
+                                <span class="adv-badge adv-a">Candidate A</span>
+                            {% elif m.advantage == "B" %}
+                                <span class="adv-badge adv-b">Candidate B</span>
+                            {% elif m.advantage == "Equal" %}
+                                <span class="adv-badge adv-equal">Equal</span>
+                            {% else %}
+                                <span class="adv-badge adv-neutral">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         TECHNICAL DEBT FINDINGS COMPARISON
+    ====================================================== -->
+    <section class="dashboard-panel">
+
+        <div class="panel-header">
+            <div>
+                <p class="panel-label">ISSUE DIAGNOSTICS</p>
+                <h2>Debt Findings & Risk Distribution</h2>
+            </div>
+            <span class="status-badge">CODE AUDIT</span>
+        </div>
+
+        <div class="compare-findings-grid">
+
+            <!-- FINDINGS A -->
+            <div class="findings-box box-a">
+                <div class="findings-box-header">
+                    <span class="compare-pill pill-a">Candidate A</span>
+                    <h3>{{ comparison.item_a.name }}</h3>
+                    <span class="risk-badge {% if comparison.item_a.debt_level == 'High Technical Debt' %}risk-high{% elif comparison.item_a.debt_level == 'Medium Technical Debt' %}risk-medium{% else %}risk-low{% endif %}">
+                        Score: {{ comparison.item_a.debt_score }}/100
+                    </span>
+                </div>
+
+                <div class="findings-body">
+                    {% if comparison.item_a.type == "Project" %}
+                    <div class="findings-stats-row">
+                        <div class="f-stat"><span class="f-num">{{ comparison.item_a.file_count }}</span><span class="f-lbl">Files</span></div>
+                        <div class="f-stat"><span class="f-num">{{ comparison.item_a.high_debt }}</span><span class="f-lbl">High Debt</span></div>
+                        <div class="f-stat"><span class="f-num">{{ comparison.item_a.medium_debt }}</span><span class="f-lbl">Medium Debt</span></div>
+                        <div class="f-stat"><span class="f-num">{{ comparison.item_a.low_debt }}</span><span class="f-lbl">Low Debt</span></div>
+                    </div>
+                    {% endif %}
+
+                    <h4>Identified Quality Factors:</h4>
+                    <div class="reasons-list">
+                        {% if comparison.item_a.reasons %}
+                            {% for r in comparison.item_a.reasons %}
+                                <span class="reason-tag">{{ r }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="reason-tag">Project quality metrics assessed across all files.</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- FINDINGS B -->
+            <div class="findings-box box-b">
+                <div class="findings-box-header">
+                    <span class="compare-pill pill-b">Candidate B</span>
+                    <h3>{{ comparison.item_b.name }}</h3>
+                    <span class="risk-badge {% if comparison.item_b.debt_level == 'High Technical Debt' %}risk-high{% elif comparison.item_b.debt_level == 'Medium Technical Debt' %}risk-medium{% else %}risk-low{% endif %}">
+                        Score: {{ comparison.item_b.debt_score }}/100
+                    </span>
+                </div>
+
+                <div class="findings-body">
+                    {% if comparison.item_b.type == "Project" %}
+                    <div class="findings-stats-row">
+                        <div class="f-stat"><span class="f-num">{{ comparison.item_b.file_count }}</span><span class="f-lbl">Files</span></div>
+                        <div class="f-stat"><span class="f-num">{{ comparison.item_b.high_debt }}</span><span class="f-lbl">High Debt</span></div>
+                        <div class="f-stat"><span class="f-num">{{ comparison.item_b.medium_debt }}</span><span class="f-lbl">Medium Debt</span></div>
+                        <div class="f-stat"><span class="f-num">{{ comparison.item_b.low_debt }}</span><span class="f-lbl">Low Debt</span></div>
+                    </div>
+                    {% endif %}
+
+                    <h4>Identified Quality Factors:</h4>
+                    <div class="reasons-list">
+                        {% if comparison.item_b.reasons %}
+                            {% for r in comparison.item_b.reasons %}
+                                <span class="reason-tag">{{ r }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="reason-tag">Project quality metrics assessed across all files.</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </section>
+
+    {% else %}
+
+    <!-- EMPTY STATE -->
+    <section class="dashboard-panel empty-project-panel">
+        <div class="empty-project-icon">⚖️</div>
+        <h2>No Comparison Generated Yet</h2>
+        <p class="panel-description">
+            Choose Candidate A and Candidate B above and click <strong>Compare Technical Debt ➔</strong> to calculate a side-by-side metric comparison and automated summary report.
+        </p>
+    </section>
+
+    {% endif %}
+
+</div>
+<!-- =========================================================
+     END VIEW 4: TECHNICAL DEBT COMPARISON
+========================================================= -->
 
 
 </main>
 
 
-
 <!-- =========================================================
-     JAVASCRIPT
+     FRONT-END JAVASCRIPT
 ========================================================= -->
 
-<script>
-
-
-/* =========================================================
-   FILE SEARCH
-========================================================= */
-
-const fileSearchInput =
-    document.getElementById("fileSearchInput");
-
-
-const fileResultsTable =
-    document.getElementById("fileResultsTable");
-
-
-if (
-    fileSearchInput &&
-    fileResultsTable
-) {
-
-    fileSearchInput.addEventListener(
-        "input",
-        function () {
-
-            const searchValue =
-                this.value
-                .toLowerCase()
-                .trim();
-
-
-            const rows =
-                fileResultsTable.querySelectorAll(
-                    "tbody tr"
-                );
-
-
-            rows.forEach(
-                function (row) {
-
-                    const rowText =
-                        row.textContent
-                        .toLowerCase();
-
-
-                    if (
-                        rowText.includes(
-                            searchValue
-                        )
-                    ) {
-
-                        row.style.display = "";
-
-                    } else {
-
-                        row.style.display = "none";
-
-                    }
-
-                }
-            );
-
-        }
-    );
-
-}
-
-
-
-/* =========================================================
-   PROJECT FILE SELECTION
-========================================================= */
-
-const projectInput =
-    document.getElementById(
-        "project_file"
-    );
-
-
-const selectedFile =
-    document.getElementById(
-        "selected-file"
-    );
-
-
-if (
-    projectInput &&
-    selectedFile
-) {
-
-    projectInput.addEventListener(
-        "change",
-        function () {
-
-            if (
-                this.files &&
-                this.files.length > 0
-            ) {
-
-                selectedFile.textContent =
-                    this.files[0].name;
-
-            } else {
-
-                selectedFile.textContent =
-                    "No file selected";
-
-            }
-
-        }
-    );
-
-}
-
-
-</script>
-
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </body>
 
