@@ -3,8 +3,6 @@ import pytest
 from src.rule_engine import detect_technical_debt
 from src.code_metrics import (
     calculate_python_metrics,
-    calculate_cbo,
-    calculate_lcom,
     detect_security_vulnerabilities,
     count_past_defects,
     estimate_code_churn
@@ -690,3 +688,50 @@ def test_rule_engine_return_structure():
         result["Reasons"],
         list
     )
+
+
+def test_detect_technical_debt_pandas_series():
+    """Verify that detect_technical_debt properly processes pandas Series objects."""
+    import pandas as pd
+
+    series = pd.Series({
+        "cyclomatic_complexity": 35,
+        "duplication_percentage": 30,
+        "test_coverage": 40,
+        "coupling_between_objects": 15,
+        "lack_of_cohesion": 0.8,
+        "code_churn": 400,
+        "past_defects": 15,
+        "security_vulnerabilities": 2
+    })
+
+    result = detect_technical_debt(series)
+
+    assert result["Debt Score"] > 0
+    assert result["Debt Level"] == "High Technical Debt"
+    assert "High Cyclomatic Complexity" in result["Reasons"]
+    assert "High Code Duplication" in result["Reasons"]
+    assert "Low Test Coverage" in result["Reasons"]
+
+
+def test_detect_technical_debt_non_dict_inputs():
+    """Verify that detect_technical_debt safely handles non-dict/invalid inputs."""
+    for bad_input in [None, "string", 42, [1, 2, 3], True]:
+        result = detect_technical_debt(bad_input)
+        assert result["Debt Score"] == 0
+        assert result["Debt Level"] == "Low Technical Debt"
+        assert "Software metrics are within acceptable limits." in result["Reasons"]
+
+
+def test_detect_technical_debt_nan_handling():
+    """Verify that detect_technical_debt safely handles NaN values."""
+    import math
+
+    row = {
+        "cyclomatic_complexity": float("nan"),
+        "test_coverage": float("nan"),
+        "duplication_percentage": float("nan")
+    }
+    result = detect_technical_debt(row)
+    assert result["Debt Score"] == 0
+    assert result["Debt Level"] == "Low Technical Debt"

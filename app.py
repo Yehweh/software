@@ -24,7 +24,13 @@ from src.project_analyzer import analyze_project
 from src.compare_engine import compare_entities
 from src.code_metrics import calculate_metrics_for_file
 from src.technical_debt_engine import calculate_technical_debt
-from src.recommendation import generate_recommendations
+from src.recommendation import (
+    generate_recommendations,
+    generate_structured_recommendations
+)
+from src.hotspot_engine import calculate_file_hotspots
+from src.quality_gate import evaluate_quality_gate
+from src.risk_engine import calculate_project_risk
 
 
 # ============================================================
@@ -47,7 +53,8 @@ app = Flask(
     )
 )
 
-app.secret_key = (
+app.secret_key = os.environ.get(
+    "SECRET_KEY",
     "technical-debt-intelligence-secret-key"
 )
 
@@ -1097,6 +1104,21 @@ def compare():
     )
 
 
+@app.route("/intelligence")
+def intelligence():
+
+    if "user_id" not in session:
+
+        return redirect(
+            url_for("login")
+        )
+
+    return redirect(
+        url_for("index")
+        + "#intelligence"
+    )
+
+
 # ============================================================
 # DASHBOARD
 # ============================================================
@@ -1130,7 +1152,7 @@ def index():
         ):
 
             result = detect_technical_debt(
-                row
+                row.to_dict() if hasattr(row, "to_dict") else row
             )
 
             score = result.get(
@@ -1287,6 +1309,74 @@ def index():
             )
 
     # ========================================================
+    # INTELLIGENCE & RISK ANALYSIS
+    # ========================================================
+
+    intelligence = None
+
+    if project:
+
+        files = project.get(
+            "files",
+            []
+        )
+
+        debt = {
+            "score": (
+                project_metrics or {}
+            ).get(
+                "average_debt_score",
+                0
+            ),
+            "level": (
+                project_metrics or {}
+            ).get(
+                "project_debt_level",
+                "Low Technical Debt"
+            )
+        }
+
+        clean_name = (
+            project.get("project_name")
+            or session.get(
+                "project_analysis",
+                {}
+            ).get(
+                "project_name"
+            )
+            or "Analyzed Project"
+        )
+
+        intelligence = {
+            "project_name":
+                clean_name,
+
+            "risk":
+                calculate_project_risk(
+                    project_metrics,
+                    files
+                ),
+
+            "hotspots":
+                calculate_file_hotspots(
+                    files
+                ),
+
+            "quality_gate":
+                evaluate_quality_gate(
+                    project_metrics,
+                    files
+                ),
+
+            "recommendations":
+                generate_structured_recommendations(
+                    project_metrics,
+                    debt,
+                    files
+                )
+        }
+
+    # ========================================================
     # COMPARISON RESULT
     # ========================================================
 
@@ -1358,7 +1448,9 @@ def index():
 
         recommendations=recommendations,
 
-        comparison=comparison
+        comparison=comparison,
+
+        intelligence=intelligence
     )
 
 
@@ -1846,8 +1938,11 @@ def clear_comparison():
 
 if __name__ == "__main__":
 
+    port = int(os.environ.get("PORT", 5000))
+    debug = os.environ.get("FLASK_ENV") == "development"
+
     app.run(
-        debug=True,
-        host="127.0.0.1",
-        port=5000
+        debug=debug,
+        host="0.0.0.0",
+        port=port
     )

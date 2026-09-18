@@ -1,4 +1,6 @@
+flask
 pandas
 numpy
 scikit-learn
-flask
+pytest
+gunicorn

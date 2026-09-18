@@ -1,5 +1,9 @@
-from data_loader import load_data
-from rule_engine import detect_technical_debt
+try:
+    from src.data_loader import load_data
+    from src.rule_engine import detect_technical_debt
+except ImportError:
+    from data_loader import load_data
+    from rule_engine import detect_technical_debt
 
 def main():
 
@@ -33,7 +37,7 @@ def main():
             low += 1
 
     print("\n========== Summary ==========")
-    print(f"Total Records Analysed : 10")
+    print("Total Records Analysed : 10")
     print(f"High Technical Debt    : {high}")
     print(f"Medium Technical Debt  : {medium}")
     print(f"Low Technical Debt     : {low}")

@@ -2,6 +2,8 @@
 Rule-based technical debt detection engine.
 """
 
+import math
+
 
 def _get_value(row, key, default=0):
     try:
@@ -19,7 +21,10 @@ def _get_value(row, key, default=0):
             if not value:
                 return default
 
-        return float(value)
+        val = float(value)
+        if math.isnan(val) or math.isinf(val):
+            return default
+        return val
 
     except (TypeError, ValueError):
         return default
@@ -28,7 +33,24 @@ def _get_value(row, key, default=0):
 def detect_technical_debt(row):
     """
     Detect technical debt using measurable software quality metrics.
+    Accepts dictionaries, pandas Series, or mapping objects.
     """
+
+    if hasattr(row, "to_dict") and callable(row.to_dict):
+        try:
+            row = row.to_dict()
+        except Exception:
+            pass
+    elif hasattr(row, "_asdict") and callable(row._asdict):
+        try:
+            row = row._asdict()
+        except Exception:
+            pass
+    elif not isinstance(row, dict):
+        try:
+            row = dict(row)
+        except Exception:
+            row = {}
 
     if not isinstance(row, dict):
         row = {}
@@ -126,12 +148,19 @@ def detect_technical_debt(row):
 
     elif isinstance(
         coverage_raw,
+        float
+    ) and (math.isnan(coverage_raw) or math.isinf(coverage_raw)):
+        coverage_valid = False
+
+    elif isinstance(
+        coverage_raw,
         str
     ):
 
         try:
-            float(coverage_raw)
-
+            val_cov = float(coverage_raw)
+            if math.isnan(val_cov) or math.isinf(val_cov):
+                coverage_valid = False
         except (
             TypeError,
             ValueError

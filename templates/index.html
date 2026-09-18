@@ -82,6 +82,15 @@
             <span>Compare</span>
         </a>
 
+        <a
+            href="#intelligence"
+            class="nav-tab"
+            data-tab="intelligence"
+        >
+            <span class="nav-tab-icon">🧠</span>
+            <span>Intelligence &amp; Risk</span>
+        </a>
+
     </nav>
 
 
@@ -355,6 +364,29 @@
 
 </section>
 
+
+<!-- =========================================================
+     INTELLIGENCE & RISK ANALYSIS QUICK-ACCESS PANEL
+========================================================= -->
+<section class="dashboard-panel intelligence-cta-panel">
+    <div class="intelligence-cta-inner">
+        <div class="intelligence-cta-text">
+            <span class="intelligence-badge-tag">
+                <span>🧠</span> ADVANCED INTELLIGENCE &amp; RISK
+            </span>
+            <h2>Intelligence &amp; Risk Analysis</h2>
+            <p>
+                Evaluate file-level technical debt hotspots, explore structured remediation playbooks, inspect the 6-dimension Quality Gate compliance, and review predictive project risk modeling.
+            </p>
+        </div>
+        <div class="intelligence-cta-actions">
+            <a href="#intelligence" class="auth-button intelligence-cta-button" data-switch-tab="intelligence">
+                <span>View Intelligence &amp; Risk</span>
+                <span class="cta-arrow">➔</span>
+            </a>
+        </div>
+    </div>
+</section>
 
 
 <!-- =========================================================
@@ -1902,7 +1934,7 @@
 <!-- =========================================================
      VIEW 4: TECHNICAL DEBT COMPARISON
 ========================================================= -->
-<div id="view-compare" class="dashboard-view">
+<div id="view-compare" class="dashboard-view-pane">
 
     <!-- =====================================================
          DUAL UPLOAD PANEL
@@ -1991,8 +2023,9 @@
             </div>
 
             <div class="compare-actions">
-                <button type="submit" class="analyze-button compare-submit-btn">
-                    Compare Technical Debt ➔
+                <button type="submit" class="compare-submit-btn">
+                    Compare Technical Debt
+                    <span class="compare-btn-icon">➔</span>
                 </button>
                 {% if comparison %}
                 <a href="{{ url_for('clear_comparison') }}" class="compare-clear-btn">
@@ -2273,6 +2306,412 @@
 </div>
 <!-- =========================================================
      END VIEW 4: TECHNICAL DEBT COMPARISON
+========================================================= -->
+
+
+<!-- =========================================================
+     VIEW 5: INTELLIGENCE & RISK ANALYSIS
+========================================================= -->
+<div id="view-intelligence" class="dashboard-view-pane">
+
+    {% if not project or not intelligence %}
+
+    <!-- EMPTY STATE -->
+    <section class="dashboard-panel empty-project-panel">
+        <div class="empty-project-icon">🧠</div>
+        <h2>Intelligence &amp; Risk Analysis</h2>
+        <p class="panel-description">
+            Upload and analyze a project to view Intelligence &amp; Risk Analysis.
+        </p>
+        <div style="margin-top: 24px;">
+            <a href="#dashboard" class="auth-button" style="display: inline-flex; width: auto; padding: 12px 28px; text-decoration: none;" data-switch-tab="dashboard">
+                <span>Upload Project on Dashboard</span>
+                <span style="margin-left: 8px;">➔</span>
+            </a>
+        </div>
+    </section>
+
+    {% else %}
+
+    <!-- INTRODUCTION -->
+    <section class="dashboard-heading">
+        <div>
+            <p class="auth-label">ADVANCED CODE INTELLIGENCE</p>
+            <h1>Intelligence &amp; Risk Analysis</h1>
+            <p>
+                Architectural risk prediction, prioritized technical debt hotspots, SonarQube-style quality gates, and structured refactoring guidance for <strong>{{ intelligence.project_name }}</strong>.
+            </p>
+        </div>
+    </section>
+
+    <!-- EXECUTIVE OVERVIEW KPI CARDS -->
+    <div class="overview-grid" style="margin-bottom: 24px;">
+        <div class="overview-card">
+            <div class="overview-icon">⚠️</div>
+            <div>
+                <span>Overall Risk</span>
+                <strong class="risk-score-highlight">{{ intelligence.risk.risk_score }} / 100</strong>
+                <span class="status-pill {{ intelligence.risk.risk_badge_class }}">{{ intelligence.risk.risk_band }} RISK</span>
+            </div>
+        </div>
+
+        <div class="overview-card">
+            <div class="overview-icon">🛡️</div>
+            <div>
+                <span>Quality Gate</span>
+                <strong class="{% if intelligence.quality_gate.overall_status == 'PASSED' %}text-passed{% else %}text-failed{% endif %}">
+                    {{ intelligence.quality_gate.overall_status }}
+                </strong>
+                <span class="status-pill {% if intelligence.quality_gate.overall_status == 'PASSED' %}gate-badge-pass{% else %}gate-badge-fail{% endif %}">
+                    {{ intelligence.quality_gate.passed_count }}/{{ intelligence.quality_gate.total_conditions }} Passed
+                </span>
+            </div>
+        </div>
+
+        <div class="overview-card">
+            <div class="overview-icon">🔥</div>
+            <div>
+                <span>Debt Hotspots</span>
+                <strong>{{ intelligence.hotspots|length }} Files</strong>
+                {% set crit_cnt = intelligence.hotspots | selectattr('priority_level', 'equalto', 'CRITICAL') | list | length %}
+                <span class="status-pill {% if crit_cnt > 0 %}priority-critical{% else %}priority-low{% endif %}">
+                    {{ crit_cnt }} Critical
+                </span>
+            </div>
+        </div>
+
+        <div class="overview-card">
+            <div class="overview-icon">💡</div>
+            <div>
+                <span>Smart Remediations</span>
+                <strong>{{ intelligence.recommendations|length }} Actions</strong>
+                <span class="status-pill priority-medium">Prioritized</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUICK SECTION JUMP LINKS -->
+    <div class="intel-nav-pills">
+        <a href="#intel-hotspots" class="intel-pill">🔥 Technical Debt Hotspots</a>
+        <a href="#intel-recommendations" class="intel-pill">💡 Intelligent Recommendations</a>
+        <a href="#intel-quality-gate" class="intel-pill">🛡️ Quality Gate (Pass/Fail)</a>
+        <a href="#intel-risk" class="intel-pill">⚠️ Risk Prediction</a>
+    </div>
+
+    <!-- =========================================================
+         FEATURE 1: TECHNICAL DEBT HOTSPOTS / PRIORITY SCORE
+    ========================================================= -->
+    <section class="dashboard-panel" id="intel-hotspots">
+        <div class="panel-header">
+            <div>
+                <p class="panel-label">FEATURE 1: REFACTORING PRIORITIZATION</p>
+                <h2>Technical Debt Hotspots &amp; Priority Score</h2>
+            </div>
+            <span class="status-badge">
+                {{ intelligence.hotspots|length }} FILES EVALUATED
+            </span>
+        </div>
+        <p class="panel-description">
+            Identifies which files and modules require attention first. Priority Score (0–100) is derived from cyclomatic complexity, code lines, code smells, duplication ratio, and technical debt score.
+        </p>
+
+        <!-- Hotspot Severity Distribution Summary -->
+        <div class="hotspot-severity-summary">
+            {% set crit_files = intelligence.hotspots | selectattr('priority_level', 'equalto', 'CRITICAL') | list %}
+            {% set high_files = intelligence.hotspots | selectattr('priority_level', 'equalto', 'HIGH') | list %}
+            {% set med_files = intelligence.hotspots | selectattr('priority_level', 'equalto', 'MEDIUM') | list %}
+            {% set low_files = intelligence.hotspots | selectattr('priority_level', 'equalto', 'LOW') | list %}
+            <div class="hotspot-stat-badge stat-crit">
+                <strong>{{ crit_files|length }}</strong> <span>Critical Priority</span>
+            </div>
+            <div class="hotspot-stat-badge stat-high">
+                <strong>{{ high_files|length }}</strong> <span>High Priority</span>
+            </div>
+            <div class="hotspot-stat-badge stat-med">
+                <strong>{{ med_files|length }}</strong> <span>Medium Priority</span>
+            </div>
+            <div class="hotspot-stat-badge stat-low">
+                <strong>{{ low_files|length }}</strong> <span>Low Priority</span>
+            </div>
+        </div>
+
+        <!-- Hotspot Table -->
+        <div class="table-container" style="margin-top: 20px;">
+            <table class="hotspot-table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">Rank</th>
+                        <th style="width: 110px;">Priority</th>
+                        <th>File Name &amp; Path</th>
+                        <th style="width: 140px;">Priority Score</th>
+                        <th style="width: 80px;">Lines</th>
+                        <th style="width: 70px;">CC</th>
+                        <th style="width: 70px;">MI</th>
+                        <th>Contributing Hotspot Factors</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for file in intelligence.hotspots %}
+                    <tr class="hotspot-row-{{ file.priority_level|lower }}">
+                        <td class="rank-cell">#{{ loop.index }}</td>
+                        <td>
+                            <span class="priority-badge {{ file.priority_badge_class }}">
+                                {{ file.priority_level }}
+                            </span>
+                        </td>
+                        <td class="file-cell">
+                            <strong class="file-name-text">{{ file.file_name }}</strong>
+                            <span class="file-path-sub">{{ file.file_path }}</span>
+                        </td>
+                        <td>
+                            <div class="priority-score-bar-wrapper">
+                                <span class="score-num"><strong>{{ file.priority_score }}</strong> / 100</span>
+                                <div class="score-progress-track">
+                                    <div class="score-progress-fill {{ file.priority_badge_class }}" style="width: {{ file.priority_score }}%;"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ file.lines }}</td>
+                        <td>{{ file.cyclomatic_complexity }}</td>
+                        <td>{{ file.maintainability_index }}</td>
+                        <td>
+                            <div class="reasons-pill-list">
+                                {% for reason in file.reasons %}
+                                    <span class="hotspot-reason-tag">{{ reason }}</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- =========================================================
+         FEATURE 2: INTELLIGENT RECOMMENDATIONS
+    ========================================================= -->
+    <section class="dashboard-panel" id="intel-recommendations">
+        <div class="panel-header">
+            <div>
+                <p class="panel-label">FEATURE 2: CONTEXT-AWARE REMEDIATION</p>
+                <h2>Intelligent Recommendations</h2>
+            </div>
+            <span class="status-badge">
+                {{ intelligence.recommendations|length }} ACTIONABLE PLAYBOOKS
+            </span>
+        </div>
+        <p class="panel-description">
+            Smart refactoring and remediation recommendations derived from actual code metrics of the uploaded project. Structured into Problem, Impact, and Recommended Action.
+        </p>
+
+        <div class="intel-rec-grid">
+            {% for rec in intelligence.recommendations %}
+            <div class="intel-rec-card {{ rec.severity_class }}">
+                <div class="rec-card-header" title="Click to expand/collapse">
+                    <div class="rec-header-left">
+                        <span class="rec-category-tag">{{ rec.category }}</span>
+                        <span class="rec-severity-badge {{ rec.severity_class }}">{{ rec.severity }}</span>
+                        <h3 class="rec-title">{{ rec.title }}</h3>
+                    </div>
+                    <div class="rec-header-right">
+                        <span class="rec-id-tag">{{ rec.id }}</span>
+                        <span class="rec-toggle-icon">➖</span>
+                    </div>
+                </div>
+                <div class="rec-card-body">
+                    <div class="rec-section-item rec-problem">
+                        <div class="rec-section-label">
+                            <span class="rec-section-icon">⚠️</span>
+                            <strong>The Problem:</strong>
+                        </div>
+                        <p>{{ rec.problem }}</p>
+                    </div>
+                    <div class="rec-section-item rec-impact">
+                        <div class="rec-section-label">
+                            <span class="rec-section-icon">💥</span>
+                            <strong>The Impact:</strong>
+                        </div>
+                        <p>{{ rec.impact }}</p>
+                    </div>
+                    <div class="rec-section-item rec-action">
+                        <div class="rec-section-label">
+                            <span class="rec-section-icon">🛠️</span>
+                            <strong>Recommended Action:</strong>
+                        </div>
+                        <p>{{ rec.action }}</p>
+                    </div>
+                    {% if rec.files %}
+                    <div class="rec-files-involved">
+                        <span class="rec-files-label">Relevant File(s):</span>
+                        <div class="rec-files-tags">
+                            {% for f in rec.files %}
+                                <span class="rec-file-pill">📄 {{ f }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- =========================================================
+         FEATURE 3: QUALITY GATE (PASS / FAIL SYSTEM)
+    ========================================================= -->
+    <section class="dashboard-panel" id="intel-quality-gate">
+        <div class="panel-header">
+            <div>
+                <p class="panel-label">FEATURE 3: POLICY ENFORCEMENT</p>
+                <h2>Quality Gate (SonarQube-Style)</h2>
+            </div>
+            <span class="status-badge {% if intelligence.quality_gate.overall_status == 'PASSED' %}gate-badge-pass{% else %}gate-badge-fail{% endif %}">
+                GATE: {{ intelligence.quality_gate.overall_status }}
+            </span>
+        </div>
+        <p class="panel-description">
+            Evaluates project metrics against configurable quality thresholds covering 6 critical code health categories (Security &amp; Defect Risk, Maintainability, Duplication, Testing, Complexity, Technical Debt).
+        </p>
+
+        <!-- Overall Gate Banner -->
+        {% if intelligence.quality_gate.overall_status == 'PASSED' %}
+        <div class="quality-gate-banner gate-passed">
+            <div class="gate-banner-icon">✓</div>
+            <div class="gate-banner-content">
+                <h3>QUALITY GATE PASSED</h3>
+                <p>The codebase satisfies all quality standards ({{ intelligence.quality_gate.passed_count }}/{{ intelligence.quality_gate.total_conditions }} conditions passed). Ready for release.</p>
+            </div>
+        </div>
+        {% else %}
+        <div class="quality-gate-banner gate-failed">
+            <div class="gate-banner-icon">✕</div>
+            <div class="gate-banner-content">
+                <h3>QUALITY GATE FAILED</h3>
+                <p>Project failed {{ intelligence.quality_gate.failed_count }} out of {{ intelligence.quality_gate.total_conditions }} quality gate conditions. Code remediation is required prior to release.</p>
+                <div class="gate-failures-list">
+                    <strong>Failed Conditions:</strong>
+                    <ul>
+                        {% for failure in intelligence.quality_gate.failed_reasons %}
+                            <li>{{ failure }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 6 Conditions Grid -->
+        <div class="quality-gate-grid">
+            {% for condition in intelligence.quality_gate.conditions %}
+            <div class="gate-condition-card {% if condition.status == 'PASS' %}gate-card-pass{% else %}gate-card-fail{% endif %}">
+                <div class="gate-card-header">
+                    <span class="gate-category-label">{{ condition.category }}</span>
+                    <span class="gate-condition-badge {% if condition.status == 'PASS' %}badge-pass{% else %}badge-fail{% endif %}">
+                        {{ condition.status }}
+                    </span>
+                </div>
+                <h4 class="gate-card-name">{{ condition.name }}</h4>
+                <div class="gate-card-metrics">
+                    <div class="gate-metric-box">
+                        <span class="gate-metric-label">Actual Value</span>
+                        <span class="gate-metric-val {% if condition.status == 'PASS' %}val-pass{% else %}val-fail{% endif %}">{{ condition.actual_display }}</span>
+                    </div>
+                    <div class="gate-metric-box">
+                        <span class="gate-metric-label">Threshold</span>
+                        <span class="gate-metric-val val-threshold">{{ condition.threshold_description }}</span>
+                    </div>
+                </div>
+                <p class="gate-condition-reason">{{ condition.reason }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- =========================================================
+         FEATURE 4: RISK PREDICTION / ESTIMATION
+    ========================================================= -->
+    <section class="dashboard-panel" id="intel-risk">
+        <div class="panel-header">
+            <div>
+                <p class="panel-label">FEATURE 4: PREDICTIVE RISK MODEL</p>
+                <h2>Predictive Project Risk Assessment</h2>
+            </div>
+            <span class="status-badge">
+                MULTI-FACTOR MODEL
+            </span>
+        </div>
+        <p class="panel-description">
+            Heuristic weighted risk estimation evaluating defect likelihood, maintainability decay, technical debt growth, and testing reliability.
+        </p>
+
+        <!-- Risk Hero Card -->
+        <div class="risk-hero-card">
+            <div class="risk-score-display">
+                <div class="risk-score-circle {{ intelligence.risk.risk_badge_class }}">
+                    <span class="risk-big-score">{{ intelligence.risk.risk_score }}</span>
+                    <span class="risk-max-score">/ 100</span>
+                </div>
+                <div class="risk-band-info">
+                    <div class="risk-band-badge {{ intelligence.risk.risk_badge_class }}">
+                        {{ intelligence.risk.risk_band }} RISK
+                    </div>
+                    <h3 class="risk-summary-title">Project Risk Band: {{ intelligence.risk.risk_band }}</h3>
+                    <p class="risk-summary-text">{{ intelligence.risk.summary }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dimension Breakdown Grid -->
+        <div class="risk-dimensions-grid">
+            {% for dim in intelligence.risk.dimension_list %}
+            <div class="risk-dimension-card">
+                <div class="dim-header">
+                    <span class="dim-name">{{ dim.name }}</span>
+                    <span class="dim-badge badge-{{ dim.level|lower }}">{{ dim.level }}</span>
+                </div>
+                <div class="dim-score-row">
+                    <strong class="dim-score-num">{{ dim.score }}</strong>
+                    <span class="dim-score-max">/ 100</span>
+                </div>
+                <div class="dim-progress-track">
+                    <div class="dim-progress-fill fill-{{ dim.level|lower }}" style="width: {{ dim.score }}%;"></div>
+                </div>
+                <p class="dim-desc">{{ dim.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Top Risk Drivers -->
+        <div class="risk-drivers-panel">
+            <div class="drivers-header">
+                <span class="drivers-icon">🎯</span>
+                <h3>Top Risk Drivers in this Project</h3>
+            </div>
+            <div class="drivers-list">
+                {% for driver in intelligence.risk.top_drivers %}
+                <div class="driver-item">
+                    <span class="driver-rank">#{{ loop.index }}</span>
+                    <p class="driver-text">{{ driver }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="risk-disclaimer-box">
+            <span class="disclaimer-icon">ℹ️</span>
+            <p class="disclaimer-text">
+                <strong>Disclaimer:</strong> {{ intelligence.risk.disclaimer }}
+            </p>
+        </div>
+    </section>
+
+    {% endif %}
+
+</div>
+<!-- =========================================================
+     END VIEW 5: INTELLIGENCE & RISK ANALYSIS
 ========================================================= -->
 
 

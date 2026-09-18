@@ -103,7 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Initialize active tab from URL hash on load
     const initialHash = window.location.hash.replace("#", "").trim();
-    if (["about-metrics", "benchmark", "compare"].includes(initialHash)) {
+    if (["about-metrics", "benchmark", "compare", "intelligence"].includes(initialHash)) {
         switchDashboardTab(initialHash, false);
     } else {
         switchDashboardTab("dashboard", false);
@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Support browser Back/Forward buttons
     window.addEventListener("hashchange", () => {
         const hash = window.location.hash.replace("#", "").trim();
-        if (["about-metrics", "benchmark", "compare"].includes(hash)) {
+        if (["about-metrics", "benchmark", "compare", "intelligence"].includes(hash)) {
             switchDashboardTab(hash, false);
         } else {
             switchDashboardTab("dashboard", false);
@@ -145,13 +145,41 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+
+    // ---------------------------------------------------------
+    // 8. Recommendation Cards Expand / Collapse & Filtering
+    // ---------------------------------------------------------
+    const recToggles = document.querySelectorAll(".rec-card-header");
+    recToggles.forEach((header) => {
+        header.addEventListener("click", function () {
+            const card = this.closest(".intel-rec-card");
+            if (card) {
+                card.classList.toggle("collapsed");
+                const icon = card.querySelector(".rec-toggle-icon");
+                if (icon) {
+                    icon.textContent = card.classList.contains("collapsed") ? "➕" : "➖";
+                }
+            }
+        });
+    });
+
+    // Quick jump buttons to tab
+    document.querySelectorAll("[data-switch-tab]").forEach((btn) => {
+        btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            const target = this.getAttribute("data-switch-tab");
+            if (target) {
+                switchDashboardTab(target);
+            }
+        });
+    });
 });
 
 /**
- * Switches the active view pane between Dashboard, About Metrics, Baseline Benchmark, and Compare.
+ * Switches the active view pane between Dashboard, About Metrics, Baseline Benchmark, Compare, and Intelligence.
  */
 function switchDashboardTab(targetTab, updateHistory = true) {
-    const validTabs = ["dashboard", "about-metrics", "benchmark", "compare"];
+    const validTabs = ["dashboard", "about-metrics", "benchmark", "compare", "intelligence"];
     if (!validTabs.includes(targetTab)) {
         targetTab = "dashboard";
     }
@@ -170,6 +198,7 @@ function switchDashboardTab(targetTab, updateHistory = true) {
     const viewAbout = document.getElementById("view-about-metrics");
     const viewBenchmark = document.getElementById("view-benchmark");
     const viewCompare = document.getElementById("view-compare");
+    const viewIntelligence = document.getElementById("view-intelligence");
 
     if (viewDashboard) {
         viewDashboard.classList.toggle("active-view", targetTab === "dashboard");
@@ -182,6 +211,9 @@ function switchDashboardTab(targetTab, updateHistory = true) {
     }
     if (viewCompare) {
         viewCompare.classList.toggle("active-view", targetTab === "compare");
+    }
+    if (viewIntelligence) {
+        viewIntelligence.classList.toggle("active-view", targetTab === "intelligence");
     }
 
     // 3. Update URL Hash
