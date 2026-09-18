@@ -141,6 +141,22 @@ def init_db():
             ADD COLUMN password TEXT
         """)
 
+    # --------------------------------------------------------
+    # SEED DEFAULT USER IF DATABASE IS EMPTY
+    # --------------------------------------------------------
+    cursor.execute("SELECT COUNT(*) FROM users")
+    user_count = cursor.fetchone()[0]
+
+    if user_count == 0:
+        demo_password_hash = generate_password_hash("password123")
+        cursor.execute(
+            """
+            INSERT INTO users (name, email, password)
+            VALUES (?, ?, ?)
+            """,
+            ("Test User", "tester@example.com", demo_password_hash)
+        )
+
     connection.commit()
     connection.close()
 
