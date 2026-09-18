@@ -80,85 +80,106 @@ os.makedirs(
 
 def init_db():
 
-    connection = sqlite3.connect(
-        DATABASE
-    )
-
-    cursor = connection.cursor()
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL DEFAULT '',
-            email TEXT UNIQUE,
-            password TEXT
+    connection = None
+    try:
+        connection = sqlite3.connect(
+            DATABASE,
+            timeout=15.0
         )
-    """)
 
-    cursor.execute(
-        "PRAGMA table_info(users)"
-    )
+        cursor = connection.cursor()
 
-    columns = [
-        row[1]
-        for row in cursor.fetchall()
-    ]
-
-    # --------------------------------------------------------
-    # OLD DATABASE MIGRATION
-    # --------------------------------------------------------
-
-    if "username" in columns and "email" not in columns:
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL DEFAULT '',
+                email TEXT UNIQUE,
+                password TEXT
+            )
+        """)
 
         cursor.execute(
-            "ALTER TABLE users ADD COLUMN email TEXT"
+            "PRAGMA table_info(users)"
         )
 
-        cursor.execute("""
-            UPDATE users
-            SET email = username
-            WHERE email IS NULL
-        """)
+        columns = [
+            row[1]
+            for row in cursor.fetchall()
+        ]
 
-    if "name" not in columns:
+        # --------------------------------------------------------
+        # OLD DATABASE MIGRATION
+        # --------------------------------------------------------
 
-        cursor.execute("""
-            ALTER TABLE users
-            ADD COLUMN name TEXT NOT NULL DEFAULT ''
-        """)
+        if "username" in columns and "email" not in columns:
+            try:
+                cursor.execute(
+                    "ALTER TABLE users ADD COLUMN email TEXT"
+                )
+                cursor.execute("""
+                    UPDATE users
+                    SET email = username
+                    WHERE email IS NULL
+                """)
+            except Exception:
+                pass
 
-    if "email" not in columns:
+        if "name" not in columns:
+            try:
+                cursor.execute("""
+                    ALTER TABLE users
+                    ADD COLUMN name TEXT NOT NULL DEFAULT ''
+                """)
+            except Exception:
+                pass
 
-        cursor.execute("""
-            ALTER TABLE users
-            ADD COLUMN email TEXT
-        """)
+        if "email" not in columns:
+            try:
+                cursor.execute("""
+                    ALTER TABLE users
+                    ADD COLUMN email TEXT
+                """)
+            except Exception:
+                pass
 
-    if "password" not in columns:
+        if "password" not in columns:
+            try:
+                cursor.execute("""
+                    ALTER TABLE users
+                    ADD COLUMN password TEXT
+                """)
+            except Exception:
+                pass
 
-        cursor.execute("""
-            ALTER TABLE users
-            ADD COLUMN password TEXT
-        """)
+        # --------------------------------------------------------
+        # SEED DEFAULT USER IF DATABASE IS EMPTY (MULTI-WORKER SAFE)
+        # --------------------------------------------------------
+        try:
+            cursor.execute("SELECT COUNT(*) FROM users")
+            row = cursor.fetchone()
+            user_count = row[0] if row else 0
 
-    # --------------------------------------------------------
-    # SEED DEFAULT USER IF DATABASE IS EMPTY
-    # --------------------------------------------------------
-    cursor.execute("SELECT COUNT(*) FROM users")
-    user_count = cursor.fetchone()[0]
+            if user_count == 0:
+                demo_password_hash = generate_password_hash("password123")
+                cursor.execute(
+                    """
+                    INSERT OR IGNORE INTO users (name, email, password)
+                    VALUES (?, ?, ?)
+                    """,
+                    ("Test User", "tester@example.com", demo_password_hash)
+                )
+        except (sqlite3.IntegrityError, sqlite3.OperationalError):
+            pass
 
-    if user_count == 0:
-        demo_password_hash = generate_password_hash("password123")
-        cursor.execute(
-            """
-            INSERT INTO users (name, email, password)
-            VALUES (?, ?, ?)
-            """,
-            ("Test User", "tester@example.com", demo_password_hash)
-        )
-
-    connection.commit()
-    connection.close()
+        connection.commit()
+    except Exception as err:
+        print(f"init_db notice: {err}")
+    finally:
+        if connection:
+            try:
+                connection.close()
+            except Exception:
+                pass
 
 
 init_db()
@@ -872,7 +893,8 @@ def signup():
             )
 
         connection = sqlite3.connect(
-            DATABASE
+            DATABASE,
+            timeout=15.0
         )
 
         cursor = connection.cursor()
@@ -908,7 +930,8 @@ def signup():
         try:
 
             connection = sqlite3.connect(
-                DATABASE
+                DATABASE,
+                timeout=15.0
             )
 
             cursor = connection.cursor()
@@ -988,7 +1011,8 @@ def login():
             )
 
         connection = sqlite3.connect(
-            DATABASE
+            DATABASE,
+            timeout=15.0
         )
 
         cursor = connection.cursor()
