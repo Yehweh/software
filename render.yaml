@@ -3,9 +3,11 @@ services:
     name: technical-debt-intelligence
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app --workers 2 --timeout 120
+    startCommand: python run.py
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
+      - key: PORT
+        value: 10000
       - key: SECRET_KEY
         generateValue: true

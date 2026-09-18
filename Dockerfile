@@ -3,13 +3,14 @@ FROM python:3.11-slim
 WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    PORT=10000
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE 5000
+EXPOSE 10000
 
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0: --workers 2 --timeout 120 app:app"]
+CMD ["python", "run.py"]
